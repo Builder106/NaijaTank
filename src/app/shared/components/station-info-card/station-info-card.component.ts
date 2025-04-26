@@ -1,11 +1,12 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { RouterModule } from '@angular/router';
 import { Station } from '../../../core/models/station.model';
 
 @Component({
   selector: 'app-station-info-card',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, RouterModule],
   template: `
     <div class="bg-white rounded-lg shadow-lg p-4">
       <div class="flex justify-between items-start mb-4">
@@ -22,13 +23,13 @@ import { Station } from '../../../core/models/station.model';
       </div>
       
       <div class="space-y-2">
-        <div *ngIf="station?.fuelStatus.pms.available" class="flex justify-between">
+        <div *ngIf="station?.fuelStatus?.pms?.available" class="flex justify-between">
           <span class="text-sm">PMS:</span>
-          <span class="font-medium">₦{{station?.fuelStatus.pms.price}}</span>
+          <span class="font-medium">₦{{station?.fuelStatus?.pms?.price}}</span>
         </div>
-        <div *ngIf="station?.fuelStatus.diesel.available" class="flex justify-between">
+        <div *ngIf="station?.fuelStatus?.diesel?.available" class="flex justify-between">
           <span class="text-sm">Diesel:</span>
-          <span class="font-medium">₦{{station?.fuelStatus.diesel.price}}</span>
+          <span class="font-medium">₦{{station?.fuelStatus?.diesel?.price}}</span>
         </div>
       </div>
     </div>

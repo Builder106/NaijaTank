@@ -31,9 +31,9 @@ import { logout } from '../../../store/actions/user.actions';
                 <button 
                   (click)="toggleMenu()"
                   class="flex items-center text-sm font-medium text-gray-700 hover:text-primary-500">
-                  <span class="hidden md:block mr-2">{{ (user$ | async)?.name || 'My Account' }}</span>
+                  <span class="hidden md:block mr-2">{{ (user$ | async)?.name ?? 'My Account' }}</span>
                   <div class="w-8 h-8 bg-primary-500 rounded-full flex items-center justify-center text-white font-medium">
-                    {{ (user$ | async)?.name?.charAt(0).toUpperCase() || 'U' }}
+                    {{ ((user$ | async)?.name ?? 'U').charAt(0).toUpperCase() }}
                   </div>
                 </button>
                 

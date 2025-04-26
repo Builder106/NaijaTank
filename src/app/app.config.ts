@@ -28,15 +28,13 @@ export const appConfig: ApplicationConfig = {
     provideStore(reducers, { metaReducers }),
     provideEffects([StationEffects, UserEffects, GeolocationEffects]),
     provideStoreDevtools({ maxAge: 25, logOnly: !isDevMode() }),
-    {
-      provide: TranslateModule.forRoot({
-        loader: {
-          provide: TranslateLoader,
-          useFactory: HttpLoaderFactory,
-          deps: [HttpClient]
-        },
-        defaultLanguage: 'en'
-      }).providers || []
-    }
+    ...TranslateModule.forRoot({
+      loader: {
+        provide: TranslateLoader,
+        useFactory: HttpLoaderFactory,
+        deps: [HttpClient]
+      },
+      defaultLanguage: 'en'
+    }).providers || []
   ]
 };

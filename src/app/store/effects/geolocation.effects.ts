@@ -54,7 +54,7 @@ export class GeolocationEffects {
       map(({ error }) => 
         UiActions.showToast({ 
           message: `Location access failed: ${error}. Please enable location or enter your address manually.`, 
-          type: 'warning' 
+          toastType: 'warning' 
         })
       )
     )

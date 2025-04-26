@@ -4,7 +4,7 @@ export const showToast = createAction(
   '[UI] Show Toast',
   props<{ 
     message: string; 
-    type: 'success' | 'error' | 'warning' | 'info';
+    toastType: 'success' | 'error' | 'warning' | 'info';
   }>()
 );
 

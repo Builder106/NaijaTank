@@ -7,7 +7,6 @@ import { AppState } from '../../store';
 import { Station } from '../../core/models/station.model';
 import { StationCardComponent } from '../../shared/components/station-card/station-card.component';
 import { LocationSelectorComponent } from '../../shared/components/location-selector/location-selector.component';
-import { SearchBarComponent } from '../../shared/components/search-bar/search-bar.component';
 
 @Component({
   selector: 'app-home',
@@ -16,8 +15,7 @@ import { SearchBarComponent } from '../../shared/components/search-bar/search-ba
     CommonModule,
     RouterModule,
     StationCardComponent,
-    LocationSelectorComponent,
-    SearchBarComponent
+    LocationSelectorComponent
   ],
   template: `
     <div class="min-h-screen bg-gray-50">
