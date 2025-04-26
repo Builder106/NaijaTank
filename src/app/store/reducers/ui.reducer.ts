@@ -26,12 +26,12 @@ export const initialState: State = {
 export const reducer = createReducer(
   initialState,
   
-  on(UiActions.showToast, (state, { message, type }) => ({
+  on(UiActions.showToast, (state, { message, toastType }) => ({
     ...state,
     toast: {
       visible: true,
       message,
-      type
+      type: toastType
     }
   })),
   
