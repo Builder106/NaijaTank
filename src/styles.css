@@ -1,129 +1,159 @@
-
 /* Google Fonts import */
 @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&family=Montserrat:wght@500;600;700&display=swap');
 
-/* Tailwind CSS imports */
+/* Tailwind CSS v4 imports with configuration reference */
 @import "tailwindcss";
 
-html, body {
-  height: 100%;
-  margin: 0;
-  font-family: 'Roboto', sans-serif;
-  background-color: theme('colors.gray.50');
-  color: theme('colors.gray.900');
+/* Custom theme variables */
+@theme {
+  /* Define primary colors as CSS variables */
+  --primary-50: #e6f5ef;
+  --primary-100: #ccead0;
+  --primary-200: #99d6a2;
+  --primary-300: #66c173;
+  --primary-400: #33ad45;
+  --primary-500: #008751; /* Nigerian green */
+  --primary-600: #006c41;
+  --primary-700: #005131;
+  --primary-800: #003720;
+  --primary-900: #001c10;
+  
+  /* Other brand colors */
+  --secondary: #FFFFFF; /* Nigerian white */
+  --accent-500: #FF7A00; /* Orange accent */
+  --success-500: #10B981; /* Green for success states */
+  --warning-500: #F59E0B; /* Yellow for warning states */
+  --error-500: #EF4444; /* Red for error states */
+  
+  /* Font families */
+  --font-sans: 'Roboto', sans-serif;
+  --font-display: 'Montserrat', sans-serif;
 }
 
-h1, h2, h3, h4, h5, h6 {  
-  font-family: 'Montserrat', sans-serif;  
-  font-weight: 600;  
-  letter-spacing: -0.025em;
-} /* Custom utility classes */
+@layer base {
+  html, body {
+    height: 100%;
+    margin: 0;
+    font-family: var(--font-sans);
+    background-color: var(--color-gray-50);
+    color: var(--color-gray-900);
+  }
 
-.btn {
-  padding: 0.5rem 1rem;
-  border-radius: 0.5rem;
-  font-weight: 500;
-  transition-property: color;
-  transition-duration: 200ms;
-}
-
-.btn-primary {  
-  background-color: theme('colors.primary.500');
-  color: white;
-}
-
-.btn-primary:hover {
-  background-color: theme('colors.primary.600');
-}
-
-.btn-primary:active {
-  background-color: theme('colors.primary.700');
-}
-
-.btn-secondary {  background-color: white;
-  color: theme('colors.primary.500');
-  border: 1px solid theme('colors.primary.500');
-}
-
-.btn-secondary:hover {
-  background-color: theme('colors.primary.50');
-}
-
-.btn-secondary:active {
-  background-color: theme('colors.primary.100');
-}
-
-.card {  background-color: white;
-  border-radius: 0.5rem;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-  overflow: hidden;
-}
-
-.input {
-  width: 100%;
-  padding: 0.5rem 0.75rem;
-  border: 1px solid theme('colors.gray.300');
-  border-radius: 0.5rem;
-  transition-duration: 200ms;
-}
-
-.input:focus {  outline: none;
-  box-shadow: 0 0 0 2px theme('colors.primary.500');
-  border-color: transparent;
-}
-
-.badge {
-  display: inline-flex;
-  align-items: center;
-  padding: 0.125rem 0.625rem;
-  border-radius: 9999px;
-  font-size: 0.75rem;
-  font-weight: 500;
-}
-
-.badge-success {
-  background-color: rgba(var(--success-500), 0.1);
-  color: theme('colors.success.500');
-}
-
-.badge-warning {
-  background-color: rgba(var(--warning-500), 0.1);
-  color: theme('colors.warning.500');
-}
-
-.badge-error {
-  background-color: rgba(var(--error-500), 0.1);
-  color: theme('colors.error.500');
-}
-
-/* Map styles */
-.mapboxgl-map {
-  height: 100%;
-  width: 100%;
-}
-
-/* Loader animation */
-.loader {
-  width: 1.5rem;
-  height: 1.5rem;
-  border: 2px solid theme('colors.primary.500');
-  border-top-color: transparent;
-  border-radius: 9999px;
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-display);
+    font-weight: 600;
+    letter-spacing: -0.025em;
   }
 }
 
-/* Fuel type icons */
-.fuel-icon {
-  width: 1.5rem;
-  height: 1.5rem;
-  display: inline-block;
-  background-repeat: no-repeat;
-  background-position: center;
-  background-size: contain;
+@layer components {
+  .btn {
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
+    font-weight: 500;
+    transition-property: color;
+    transition-duration: 200ms;
+  }
+
+  .btn-primary {
+    background-color: var(--color-primary-500);
+    color: white;
+  }
+
+  .btn-primary:hover {
+    background-color: var(--color-primary-600);
+  }
+
+  .btn-primary:active {
+    background-color: var(--color-primary-700);
+  }
+
+  .btn-secondary {
+    background-color: white;
+    color: var(--color-primary-500);
+    border: 1px solid var(--color-primary-500);
+  }
+
+  .btn-secondary:hover {
+    background-color: var(--color-primary-50);
+  }
+
+  .btn-secondary:active {
+    background-color: var(--color-primary-100);
+  }
+
+  .card {
+    background-color: white;
+    border-radius: 0.5rem;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
+                0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    overflow: hidden;
+  }
+
+  .input {
+    width: 100%;
+    padding: 0.5rem 0.75rem;
+    border: 1px solid var(--color-gray-300);
+    border-radius: 0.5rem;
+    transition-duration: 200ms;
+  }
+
+  .input:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px var(--color-primary-500);
+    border-color: transparent;
+  }
+
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.125rem 0.625rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 500;
+  }
+
+  .badge-success {
+    background-color: rgba(16, 185, 129, 0.1);
+    color: var(--color-success-500);
+  }
+
+  .badge-warning {
+    background-color: rgba(245, 158, 11, 0.1);
+    color: var(--color-warning-500);
+  }
+
+  .badge-error {
+    background-color: rgba(239, 68, 68, 0.1);
+    color: var(--color-error-500);
+  }
+
+  .mapboxgl-map {
+    height: 100%;
+    width: 100%;
+  }
+
+  .loader {
+    width: 1.5rem;
+    height: 1.5rem;
+    border: 2px solid var(--color-primary-500);
+    border-top-color: transparent;
+    border-radius: 9999px;
+    animation: spin 1s linear infinite;
+  }
+
+  @keyframes spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  .fuel-icon {
+    width: 1.5rem;
+    height: 1.5rem;
+    display: inline-block;
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: contain;
+  }
 }
