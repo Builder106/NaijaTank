@@ -32,8 +32,11 @@
             "outputPath": "dist/demo",
             "polyfills": ["zone.js"],
             "scripts": [],
-            "styles": ["src/global_styles.css"],
-            "tsConfig": "tsconfig.app.json"
+            "styles": ["src/styles.css"],
+            "tsConfig": "tsconfig.app.json",
+            "stylePreprocessorOptions": {
+              "includePaths": ["node_modules"]
+            }
           }
         },
         "serve": {

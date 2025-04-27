@@ -1,0 +1,129 @@
+
+/* Google Fonts import */
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&family=Montserrat:wght@500;600;700&display=swap');
+
+/* Tailwind CSS imports */
+@import "tailwindcss";
+
+html, body {
+  height: 100%;
+  margin: 0;
+  font-family: 'Roboto', sans-serif;
+  background-color: theme('colors.gray.50');
+  color: theme('colors.gray.900');
+}
+
+h1, h2, h3, h4, h5, h6 {  
+  font-family: 'Montserrat', sans-serif;  
+  font-weight: 600;  
+  letter-spacing: -0.025em;
+} /* Custom utility classes */
+
+.btn {
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  font-weight: 500;
+  transition-property: color;
+  transition-duration: 200ms;
+}
+
+.btn-primary {  
+  background-color: theme('colors.primary.500');
+  color: white;
+}
+
+.btn-primary:hover {
+  background-color: theme('colors.primary.600');
+}
+
+.btn-primary:active {
+  background-color: theme('colors.primary.700');
+}
+
+.btn-secondary {  background-color: white;
+  color: theme('colors.primary.500');
+  border: 1px solid theme('colors.primary.500');
+}
+
+.btn-secondary:hover {
+  background-color: theme('colors.primary.50');
+}
+
+.btn-secondary:active {
+  background-color: theme('colors.primary.100');
+}
+
+.card {  background-color: white;
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  overflow: hidden;
+}
+
+.input {
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid theme('colors.gray.300');
+  border-radius: 0.5rem;
+  transition-duration: 200ms;
+}
+
+.input:focus {  outline: none;
+  box-shadow: 0 0 0 2px theme('colors.primary.500');
+  border-color: transparent;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.125rem 0.625rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.badge-success {
+  background-color: rgba(var(--success-500), 0.1);
+  color: theme('colors.success.500');
+}
+
+.badge-warning {
+  background-color: rgba(var(--warning-500), 0.1);
+  color: theme('colors.warning.500');
+}
+
+.badge-error {
+  background-color: rgba(var(--error-500), 0.1);
+  color: theme('colors.error.500');
+}
+
+/* Map styles */
+.mapboxgl-map {
+  height: 100%;
+  width: 100%;
+}
+
+/* Loader animation */
+.loader {
+  width: 1.5rem;
+  height: 1.5rem;
+  border: 2px solid theme('colors.primary.500');
+  border-top-color: transparent;
+  border-radius: 9999px;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Fuel type icons */
+.fuel-icon {
+  width: 1.5rem;
+  height: 1.5rem;
+  display: inline-block;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
+}
