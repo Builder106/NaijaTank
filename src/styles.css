@@ -6,154 +6,199 @@
 
 /* Custom theme variables */
 @theme {
-  /* Define primary colors as CSS variables */
-  --primary-50: #e6f5ef;
-  --primary-100: #ccead0;
-  --primary-200: #99d6a2;
-  --primary-300: #66c173;
-  --primary-400: #33ad45;
-  --primary-500: #008751; /* Nigerian green */
-  --primary-600: #006c41;
-  --primary-700: #005131;
-  --primary-800: #003720;
-  --primary-900: #001c10;
+  /* Colors */
+  --color-primary-50: #e6f5ef;
+  --color-primary-100: #ccead0;
+  --color-primary-200: #99d6a2;
+  --color-primary-300: #66c173;
+  --color-primary-400: #33ad45;
+  --color-primary-500: #008751; /* Nigerian green */
+  --color-primary-600: #006c41;
+  --color-primary-700: #005131;
+  --color-primary-800: #003720;
+  --color-primary-900: #001c10;
+
+  /* Neutral colors */
+  --color-neutral-50: #F9FAFB;
+  --color-neutral-100: #F3F4F6;
+  --color-neutral-200: #E5E7EB;
+  --color-neutral-300: #D1D5DB;
+  --color-neutral-400: #9CA3AF;
+  --color-neutral-500: #6B7280;
+  --color-neutral-600: #4B5563;
+  --color-neutral-700: #374151;
+  --color-neutral-800: #1F2937;
+  --color-neutral-900: #111827;
+
+  /* Status colors */
+  --color-success-50: #ECFDF5;
+  --color-success-500: #10B981;
+  --color-success-600: #059669;
   
-  /* Other brand colors */
-  --secondary: #FFFFFF; /* Nigerian white */
-  --accent-500: #FF7A00; /* Orange accent */
-  --success-500: #10B981; /* Green for success states */
-  --warning-500: #F59E0B; /* Yellow for warning states */
-  --error-500: #EF4444; /* Red for error states */
+  --color-warning-50: #FFFBEB;
+  --color-warning-500: #F59E0B;
+  --color-warning-600: #D97706;
   
+  --color-error-50: #FEF2F2;
+  --color-error-500: #EF4444;
+  --color-error-600: #DC2626;
+
   /* Font families */
-  --font-sans: 'Roboto', sans-serif;
-  --font-display: 'Montserrat', sans-serif;
+  --font-sans: 'Roboto', system-ui, -apple-system, sans-serif;
+  --font-display: 'Montserrat', var(--font-sans);
 }
 
 @layer base {
-  html, body {
-    height: 100%;
-    margin: 0;
+  html {
     font-family: var(--font-sans);
-    background-color: var(--color-gray-50);
-    color: var(--color-gray-900);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    @apply bg-neutral-50 text-neutral-900;
+    min-height: 100vh;
   }
 
   h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-display);
-    font-weight: 600;
-    letter-spacing: -0.025em;
+    @apply font-semibold tracking-tight;
   }
+
+  h1 { @apply text-4xl md:text-5xl; }
+  h2 { @apply text-3xl md:text-4xl; }
+  h3 { @apply text-2xl md:text-3xl; }
+  h4 { @apply text-xl md:text-2xl; }
+  h5 { @apply text-lg md:text-xl; }
+  h6 { @apply text-base md:text-lg; }
 }
 
 @layer components {
+  /* Button styles */
   .btn {
-    padding: 0.5rem 1rem;
-    border-radius: 0.5rem;
-    font-weight: 500;
-    transition-property: color;
-    transition-duration: 200ms;
+    @apply inline-flex items-center justify-center px-4 py-2 rounded-lg font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed;
   }
 
   .btn-primary {
-    background-color: var(--color-primary-500);
-    color: white;
-  }
-
-  .btn-primary:hover {
-    background-color: var(--color-primary-600);
-  }
-
-  .btn-primary:active {
-    background-color: var(--color-primary-700);
+    @apply bg-primary-500 text-white hover:bg-primary-600 active:bg-primary-700 focus:ring-primary-500;
   }
 
   .btn-secondary {
-    background-color: white;
-    color: var(--color-primary-500);
-    border: 1px solid var(--color-primary-500);
+    @apply bg-white text-primary-500 border border-primary-500 hover:bg-primary-50 active:bg-primary-100 focus:ring-primary-500;
   }
 
-  .btn-secondary:hover {
-    background-color: var(--color-primary-50);
+  .btn-ghost {
+    @apply bg-transparent text-neutral-700 hover:bg-neutral-100 active:bg-neutral-200 focus:ring-neutral-500;
   }
 
-  .btn-secondary:active {
-    background-color: var(--color-primary-100);
-  }
-
+  /* Card styles */
   .card {
-    background-color: white;
-    border-radius: 0.5rem;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
-                0 2px 4px -1px rgba(0, 0, 0, 0.06);
-    overflow: hidden;
+    @apply bg-white rounded-xl shadow-sm border border-neutral-200 overflow-hidden transition-shadow duration-200;
   }
 
-  .input {
-    width: 100%;
-    padding: 0.5rem 0.75rem;
-    border: 1px solid var(--color-gray-300);
-    border-radius: 0.5rem;
-    transition-duration: 200ms;
+  .card-hover {
+    @apply hover:shadow-md;
   }
 
-  .input:focus {
-    outline: none;
-    box-shadow: 0 0 0 2px var(--color-primary-500);
-    border-color: transparent;
+  /* Form styles */
+  .form-input {
+    @apply w-full px-4 py-2 rounded-lg border border-neutral-300 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-shadow duration-200;
   }
 
+  .form-label {
+    @apply block text-sm font-medium text-neutral-700 mb-1;
+  }
+
+  .form-helper {
+    @apply mt-1 text-sm text-neutral-500;
+  }
+
+  /* Badge styles */
   .badge {
-    display: inline-flex;
-    align-items: center;
-    padding: 0.125rem 0.625rem;
-    border-radius: 9999px;
-    font-size: 0.75rem;
-    font-weight: 500;
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
   }
 
   .badge-success {
-    background-color: rgba(16, 185, 129, 0.1);
-    color: var(--color-success-500);
+    @apply bg-success-50 text-success-600;
   }
 
   .badge-warning {
-    background-color: rgba(245, 158, 11, 0.1);
-    color: var(--color-warning-500);
+    @apply bg-warning-50 text-warning-600;
   }
 
   .badge-error {
-    background-color: rgba(239, 68, 68, 0.1);
-    color: var(--color-error-500);
+    @apply bg-error-50 text-error-600;
   }
 
-  .mapboxgl-map {
-    height: 100%;
-    width: 100%;
-  }
-
+  /* Loading states */
   .loader {
-    width: 1.5rem;
-    height: 1.5rem;
-    border: 2px solid var(--color-primary-500);
-    border-top-color: transparent;
-    border-radius: 9999px;
-    animation: spin 1s linear infinite;
+    @apply w-6 h-6 border-2 border-neutral-200 border-t-primary-500 rounded-full animate-spin;
   }
 
-  @keyframes spin {
-    to {
-      transform: rotate(360deg);
-    }
+  .skeleton {
+    @apply animate-pulse bg-neutral-200 rounded;
   }
 
-  .fuel-icon {
-    width: 1.5rem;
-    height: 1.5rem;
-    display: inline-block;
-    background-repeat: no-repeat;
-    background-position: center;
-    background-size: contain;
+  /* Map styles */
+  .mapboxgl-map {
+    @apply h-full w-full rounded-lg;
+  }
+
+  .map-marker {
+    @apply w-8 h-8 rounded-full bg-white shadow-lg flex items-center justify-center border-2 transition-transform duration-200 hover:scale-110;
+  }
+
+  .map-marker-available {
+    @apply border-success-500 text-success-500;
+  }
+
+  .map-marker-limited {
+    @apply border-warning-500 text-warning-500;
+  }
+
+  .map-marker-unavailable {
+    @apply border-error-500 text-error-500;
+  }
+
+  /* Navigation styles */
+  .nav-link {
+    @apply text-neutral-600 hover:text-primary-500 transition-colors duration-200;
+  }
+
+  .nav-link-active {
+    @apply text-primary-500 font-medium;
+  }
+
+  /* Toast notifications */
+  .toast {
+    @apply fixed bottom-4 right-4 max-w-md bg-white rounded-lg shadow-lg border border-neutral-200 p-4 transform transition-all duration-300;
+  }
+
+  .toast-success {
+    @apply border-l-4 border-l-success-500;
+  }
+
+  .toast-warning {
+    @apply border-l-4 border-l-warning-500;
+  }
+
+  .toast-error {
+    @apply border-l-4 border-l-error-500;
+  }
+}
+
+/* Utility patterns */
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  .scrollbar-hide {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
   }
 }
