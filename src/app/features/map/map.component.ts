@@ -1,17 +1,15 @@
-import { Component, OnInit, AfterViewInit, ViewChild, ElementRef } from '@angular/core';
+import { Component, OnInit, AfterViewInit, ViewChild, ElementRef, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { Store } from '@ngrx/store';
-import { Observable } from 'rxjs';
+import { Observable, Subscription } from 'rxjs';
+import { Loader } from '@googlemaps/js-api-loader';
 import { AppState } from '../../store';
 import { Station } from '../../core/models/station.model';
 import { selectStation } from '../../store/actions/station.actions';
 import { StationInfoCardComponent } from '../../shared/components/station-info-card/station-info-card.component';
 import { FilterBarComponent } from '../../shared/components/filter-bar/filter-bar.component';
 import { environment } from '../../../environments/environment';
-
-// Mapbox import would normally be done like this:
-// import * as mapboxgl from 'mapbox-gl';
 
 @Component({
   selector: 'app-map',
@@ -43,24 +41,17 @@ import { environment } from '../../../environments/environment';
         <button 
           (click)="zoomIn()"
           class="bg-white p-2 rounded-full shadow-lg text-gray-700 hover:bg-gray-50">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-          </svg>
+          +
         </button>
         <button 
           (click)="zoomOut()"
           class="bg-white p-2 rounded-full shadow-lg text-gray-700 hover:bg-gray-50">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 12h-15" />
-          </svg>
+          -
         </button>
         <button 
           (click)="centerOnUser()"
           class="bg-primary-500 p-2 rounded-full shadow-lg text-white hover:bg-primary-600">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" />
-            <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" />
-          </svg>
+          📍
         </button>
       </div>
       
@@ -69,24 +60,22 @@ import { environment } from '../../../environments/environment';
         <a 
           routerLink="/stations"
           class="bg-white px-3 py-2 rounded-lg shadow-lg text-gray-700 hover:bg-gray-50 flex items-center gap-2">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 6.75h12M8.25 12h12m-12 5.25h12M3.75 6.75h.007v.008H3.75V6.75zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zM3.75 12h.007v.008H3.75V12zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm-.375 5.25h.007v.008H3.75v-.008zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
-          </svg>
           List View
         </a>
       </div>
     </div>
   `
 })
-export class MapComponent implements OnInit, AfterViewInit {
+export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
   @ViewChild('mapContainer') mapContainer!: ElementRef;
   
   stations$: Observable<Station[]>;
   selectedStation$: Observable<Station | null>;
   userPosition$: Observable<{latitude: number | null, longitude: number | null}>;
   
-  private map: any; // This would be mapboxgl.Map
-  private markers: any[] = []; // This would be mapboxgl.Marker[]
+  private map: google.maps.Map | null = null;
+  private markers: google.maps.Marker[] = [];
+  private subscriptions: Subscription[] = [];
   
   constructor(private store: Store<AppState>) {
     this.stations$ = this.store.select(state => state.stations.stations);
@@ -95,86 +84,136 @@ export class MapComponent implements OnInit, AfterViewInit {
   }
 
   ngOnInit(): void {
-    // Initialization logic
+    // Initialize subscriptions
+    this.subscriptions.push(
+      this.stations$.subscribe(stations => {
+        if (this.map) {
+          this.updateMarkers(stations);
+        }
+      })
+    );
   }
 
-  ngAfterViewInit(): void {
-    // In a real implementation, this would initialize the map with Mapbox
-    // mapboxgl.accessToken = environment.mapboxToken;
-    
-    // this.map = new mapboxgl.Map({
-    //   container: this.mapContainer.nativeElement,
-    //   style: 'mapbox://styles/mapbox/streets-v11',
-    //   center: [3.3792, 6.5244], // Lagos coordinates
-    //   zoom: 12
-    // });
-    
-    // this.map.on('load', () => {
-    //   this.addMarkersToMap();
-    // });
-    
-    console.log('Map component initialized');
-    
-    // For development, we'll simulate having a map
-    const element = this.mapContainer.nativeElement;
-    element.innerHTML = `
-      <div class="h-full w-full flex items-center justify-center bg-gray-200">
-        <div class="text-center p-4">
-          <h3 class="text-xl font-bold mb-2">Map Visualization</h3>
-          <p>Mapbox would render here in production.</p>
-          <p class="mt-2 text-sm text-gray-600">In the actual app, you'd see station markers and your current location.</p>
-        </div>
-      </div>
-    `;
-  }
-
-  addMarkersToMap(): void {
-    // Clear existing markers
-    this.markers.forEach(marker => marker.remove());
-    this.markers = [];
-    
-    // Subscribe to stations and add markers
-    this.stations$.subscribe(stations => {
-      stations.forEach(station => {
-        // Create a custom element for the marker
-        const el = document.createElement('div');
-        el.className = 'station-marker';
-        el.innerHTML = `
-          <div class="w-10 h-10 rounded-full ${this.getMarkerColorClass(station)} flex items-center justify-center shadow-lg border-2 border-white">
-            <span class="text-white font-bold text-xs">
-              ${this.getMarkerLabel(station)}
-            </span>
-          </div>
-        `;
-        
-        // Add click event
-        el.addEventListener('click', () => {
-          this.store.dispatch(selectStation({ stationId: station.id }));
-        });
-        
-        // Add the marker to the map
-        // const marker = new mapboxgl.Marker(el)
-        //   .setLngLat([station.longitude, station.latitude])
-        //   .addTo(this.map);
-        
-        // this.markers.push(marker);
-      });
+  async ngAfterViewInit(): Promise<void> {
+    const loader = new Loader({
+      apiKey: environment.googleMapsApiKey,
+      version: 'weekly'
     });
-  }
 
-  getMarkerColorClass(station: Station): string {
-    if (station.fuelStatus.pms.available) {
-      return 'bg-success-500';
-    } else if (station.fuelStatus.diesel.available || station.fuelStatus.kerosene.available) {
-      return 'bg-warning-500';
-    } else {
-      return 'bg-error-500';
+    try {
+      await loader.load();
+      this.initializeMap();
+    } catch (error) {
+      console.error('Error loading Google Maps:', error);
     }
   }
 
-  getMarkerLabel(station: Station): string {
-    // Return first letter of brand/name
-    return station.brand.charAt(0);
+  ngOnDestroy(): void {
+    this.subscriptions.forEach(sub => sub.unsubscribe());
+    this.markers.forEach(marker => marker.setMap(null));
+  }
+
+  private initializeMap(): void {
+    if (!this.mapContainer) return;
+
+    // Default to Lagos coordinates
+    const defaultCenter = { lat: 6.5244, lng: 3.3792 };
+
+    this.map = new google.maps.Map(this.mapContainer.nativeElement, {
+      center: defaultCenter,
+      zoom: 12,
+      styles: this.getMapStyles(),
+      mapTypeControl: false,
+      streetViewControl: false,
+      fullscreenControl: false
+    });
+
+    // Subscribe to user position changes
+    this.subscriptions.push(
+      this.userPosition$.subscribe(position => {
+        if (position.latitude && position.longitude) {
+          const userLocation = new google.maps.LatLng(position.latitude, position.longitude);
+          this.map?.setCenter(userLocation);
+          this.updateUserMarker(userLocation);
+        }
+      })
+    );
+
+    // Add markers for stations
+    this.stations$.subscribe(stations => {
+      this.updateMarkers(stations);
+    });
+  }
+
+  private updateMarkers(stations: Station[]): void {
+    // Clear existing markers
+    this.markers.forEach(marker => marker.setMap(null));
+    this.markers = [];
+
+    stations.forEach(station => {
+      const marker = new google.maps.Marker({
+        position: { lat: station.latitude, lng: station.longitude },
+        map: this.map,
+        title: station.name,
+        icon: this.getMarkerIcon(station)
+      });
+
+      marker.addListener('click', () => {
+        this.store.dispatch(selectStation({ stationId: station.id }));
+      });
+
+      this.markers.push(marker);
+    });
+  }
+
+  private userMarker: google.maps.Marker | null = null;
+
+  private updateUserMarker(position: google.maps.LatLng): void {
+    if (!this.userMarker) {
+      this.userMarker = new google.maps.Marker({
+        position,
+        map: this.map,
+        icon: {
+          path: google.maps.SymbolPath.CIRCLE,
+          scale: 8,
+          fillColor: '#4285F4',
+          fillOpacity: 1,
+          strokeColor: '#ffffff',
+          strokeWeight: 2
+        }
+      });
+    } else {
+      this.userMarker.setPosition(position);
+    }
+  }
+
+  private getMarkerIcon(station: Station): google.maps.Symbol {
+    const color = station.fuelStatus.pms.available ? '#10B981' : 
+                 (station.fuelStatus.diesel.available ? '#F59E0B' : '#EF4444');
+
+    return {
+      path: google.maps.SymbolPath.CIRCLE,
+      scale: 10,
+      fillColor: color,
+      fillOpacity: 1,
+      strokeColor: '#ffffff',
+      strokeWeight: 2
+    };
+  }
+
+  private getMapStyles(): google.maps.MapTypeStyle[] {
+    return [
+      {
+        featureType: 'poi',
+        elementType: 'labels',
+        stylers: [{ visibility: 'off' }]
+      },
+      {
+        featureType: 'transit',
+        elementType: 'labels',
+        stylers: [{ visibility: 'off' }]
+      }
+    ];
   }
 
   closeStationInfo(): void {
@@ -182,24 +221,23 @@ export class MapComponent implements OnInit, AfterViewInit {
   }
 
   zoomIn(): void {
-    // this.map.zoomIn();
-    console.log('Zoom in');
+    if (this.map) {
+      this.map.setZoom((this.map.getZoom() || 0) + 1);
+    }
   }
 
   zoomOut(): void {
-    // this.map.zoomOut();
-    console.log('Zoom out');
+    if (this.map) {
+      this.map.setZoom((this.map.getZoom() || 0) - 1);
+    }
   }
 
   centerOnUser(): void {
     this.userPosition$.subscribe(position => {
-      if (position.latitude && position.longitude) {
-        // this.map.flyTo({
-        //   center: [position.longitude, position.latitude],
-        //   zoom: 15
-        // });
-        console.log(`Center on user: ${position.latitude}, ${position.longitude}`);
+      if (position.latitude && position.longitude && this.map) {
+        this.map.panTo({ lat: position.latitude, lng: position.longitude });
+        this.map.setZoom(15);
       }
-    });
+    }).unsubscribe();
   }
 }

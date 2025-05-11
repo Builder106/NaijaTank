@@ -41,7 +41,7 @@ import { StationCardComponent } from '../../shared/components/station-card/stati
         </div>
 
         <!-- Stats -->
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-8 max-w-4xl mx-auto text-center text-yellow-400 mb-16">
+        <div class="grid grid-cols-2 md:grid-cols-3 gap-8 max-w-4xl mx-auto text-center text-yellow-400 mb-16">
           <div>
             <p class="text-4xl md:text-5xl font-bold mb-2">514</p>
             <p class="text-sm text-white/80">Stations Tracked</p>
@@ -49,10 +49,6 @@ import { StationCardComponent } from '../../shared/components/station-card/stati
           <div>
             <p class="text-4xl md:text-5xl font-bold mb-2">24/7</p>
             <p class="text-sm text-white/80">Live Updates</p>
-          </div>
-          <div>
-            <p class="text-4xl md:text-5xl font-bold mb-2">52,870+</p>
-            <p class="text-sm text-white/80">Active Users</p>
           </div>
           <div>
             <p class="text-4xl md:text-5xl font-bold mb-2">98%</p>
@@ -93,48 +89,12 @@ import { StationCardComponent } from '../../shared/components/station-card/stati
       </div>
     </section>
 
-    <!-- Community Section -->
-    <section class="bg-neutral-50 py-16">
-      <div class="container mx-auto px-4">
-        <div class="max-w-4xl mx-auto">
-          <h2 class="text-2xl font-bold mb-6">Powered by the Community</h2>
-          
-          <div class="flex -space-x-2 mb-6">
-            <div class="w-12 h-12 rounded-full border-2 border-white">
-              <img src="https://images.pexels.com/photos/2269872/pexels-photo-2269872.jpeg" 
-                   alt="Community member" 
-                   class="w-full h-full rounded-full object-cover">
-            </div>
-            <div class="w-12 h-12 rounded-full border-2 border-white">
-              <img src="https://images.pexels.com/photos/3310695/pexels-photo-3310695.jpeg" 
-                   alt="Community member" 
-                   class="w-full h-full rounded-full object-cover">
-            </div>
-            <div class="w-12 h-12 rounded-full border-2 border-white">
-              <img src="https://images.pexels.com/photos/2406949/pexels-photo-2406949.jpeg" 
-                   alt="Community member" 
-                   class="w-full h-full rounded-full object-cover">
-            </div>
-            <div class="w-12 h-12 rounded-full border-2 border-white">
-              <img src="https://images.pexels.com/photos/1542085/pexels-photo-1542085.jpeg" 
-                   alt="Community member" 
-                   class="w-full h-full rounded-full object-cover">
-            </div>
-          </div>
-
-          <p class="text-neutral-600 mb-4">
-            Blessing just reported PMS available on Lagos Island
-          </p>
-        </div>
-      </div>
-    </section>
-
     <!-- CTA Section -->
     <section class="bg-yellow-400 py-16">
       <div class="container mx-auto px-4">
         <div class="max-w-4xl mx-auto text-center">
           <h2 class="text-4xl md:text-5xl font-bold mb-4">
-            Join 50,000+ Nigerians<br>
+            Join Nigerians<br>
             Finding Fuel Faster.
           </h2>
           <a routerLink="/auth" class="btn bg-black text-white hover:bg-neutral-900 mt-8">
