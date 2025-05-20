@@ -5,3 +5,4 @@ bun.lock
 package-lock.json
 .env
 email_templates/
+NaijaTank_Development_Phases.md
