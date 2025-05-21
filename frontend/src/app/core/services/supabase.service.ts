@@ -5,13 +5,21 @@ import { environment } from '../../../environments/environment'; // Adjusted pat
 @Injectable({
   providedIn: 'root'
 })
+
 export class SupabaseService {
   public supabase: SupabaseClient;
 
   constructor() {
+    const supabaseUrl = environment.supabaseUrl;
+    const supabaseKey = environment.supabaseKey;
+    
+    if (!supabaseUrl || !supabaseKey) {
+      console.error('Supabase URL or key is missing in environment configuration');
+    }
+    
     this.supabase = createClient(
-      environment.supabaseUrl,
-      environment.supabaseKey
+      supabaseUrl,
+      supabaseKey
     );
   }
 } 

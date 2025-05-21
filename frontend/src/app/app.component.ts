@@ -8,6 +8,7 @@ import { NavbarComponent } from './shared/components/navbar/navbar.component';
 import { FooterComponent } from './shared/components/footer/footer.component';
 import { ToastComponent } from './shared/components/toast/toast.component';
 import { initGeolocation } from './store/actions/geolocation.actions';
+import * as AuthActions from './store/actions/auth.actions';
 
 @Component({
   selector: 'app-root',
@@ -49,5 +50,7 @@ export class AppComponent implements OnInit {
   ngOnInit() {
     // Initialize geolocation
     this.store.dispatch(initGeolocation());
+    // Check for existing auth session on app load
+    this.store.dispatch(AuthActions.checkAuthSession());
   }
 }

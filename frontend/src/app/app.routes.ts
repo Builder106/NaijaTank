@@ -7,7 +7,7 @@ export const routes: Routes = [
   },
   {
     path: 'map',
-    loadComponent: () => import('./features/map/map.component').then(m => m.MapComponent)
+    loadComponent: () => import('./features/stations/components/station-map/station-map.component').then(m => m.StationMapComponent)
   },
   {
     path: 'stations',
@@ -19,11 +19,11 @@ export const routes: Routes = [
   },
   {
     path: 'profile',
-    loadComponent: () => import('./features/profile/profile.component').then(m => m.ProfileComponent)
+    loadComponent: () => import('./features/user/profile.component').then(m => m.ProfileComponent)
   },
   {
     path: 'auth',
-    loadComponent: () => import('./features/auth/auth.component').then(m => m.AuthComponent)
+    loadComponent: () => import('./features/auth/components/login/login.component').then(m => m.LoginComponent)
   },
   {
     path: '**',

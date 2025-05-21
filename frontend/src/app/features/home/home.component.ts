@@ -5,12 +5,11 @@ import { Store } from '@ngrx/store';
 import { Observable } from 'rxjs';
 import { AppState } from '../../store';
 import { Station } from '../../core/models/station.model';
-import { StationCardComponent } from '../../shared/components/station-card/station-card.component';
 
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [CommonModule, RouterModule, StationCardComponent],
+  imports: [CommonModule, RouterModule],
   template: `
     <!-- Hero Section -->
     <section class="relative bg-primary-900 overflow-hidden min-h-screen">

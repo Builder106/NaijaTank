@@ -4,15 +4,26 @@ import { RouterModule } from '@angular/router';
 import { Store } from '@ngrx/store';
 import { Observable, Subscription } from 'rxjs';
 import { Loader } from '@googlemaps/js-api-loader';
-import { AppState } from '../../store';
-import { Station } from '../../core/models/station.model';
-import { selectStation } from '../../store/actions/station.actions';
-import { StationInfoCardComponent } from '../../shared/components/station-info-card/station-info-card.component';
-import { FilterBarComponent } from '../../shared/components/filter-bar/filter-bar.component';
-import { environment } from '../../../environments/environment';
+import { Station } from '../../../../core/models/station.model';
+import { StationInfoCardComponent } from '../../../../shared/components/station-info-card/station-info-card.component';
+import { FilterBarComponent } from '../../../../shared/components/filter-bar/filter-bar.component';
+import { environment } from '../../../../../environments/environment';
+
+interface AppState {
+  stations: {
+    stations: Station[];
+    selectedStation: Station | null;
+  };
+  geolocation: {
+    currentPosition: {
+      latitude: number | null;
+      longitude: number | null;
+    }
+  }
+}
 
 @Component({
-  selector: 'app-map',
+  selector: 'app-station-map',
   standalone: true,
   imports: [
     CommonModule,
@@ -66,7 +77,7 @@ import { environment } from '../../../environments/environment';
     </div>
   `
 })
-export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
+export class StationMapComponent implements OnInit, AfterViewInit, OnDestroy {
   @ViewChild('mapContainer') mapContainer!: ElementRef;
   
   stations$: Observable<Station[]>;
@@ -159,7 +170,7 @@ export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
       });
 
       marker.addListener('click', () => {
-        this.store.dispatch(selectStation({ stationId: station.id }));
+        this.store.dispatch({ type: '[Station] Select Station', stationId: station.id });
       });
 
       this.markers.push(marker);
