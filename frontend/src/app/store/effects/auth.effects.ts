@@ -5,9 +5,9 @@ import { catchError, map, switchMap, tap, exhaustMap } from 'rxjs/operators';
 import { AuthService } from '../../core/services/auth.service';
 import * as AuthActions from '../actions/auth.actions';
 import { Router } from '@angular/router';
-import { SignInWithPasswordCredentials, SignUpWithPasswordCredentials, User, Session, AuthError } from '@supabase/supabase-js';
+import { User, Session, AuthError, SignInWithPasswordCredentials, SignUpWithPasswordCredentials } from '@supabase/supabase-js';
+import { from } from 'rxjs';
 
-// TODO: Fix errors
 @Injectable()
 export class AuthEffects {
   constructor(
@@ -20,7 +20,7 @@ export class AuthEffects {
     this.actions$.pipe(
       ofType(AuthActions.login),
       exhaustMap((action) =>
-        this.authService.signInWithEmail(action.email, action.password).pipe(
+        from(this.authService.signInWithEmailPassword({ email: action.email, password: action.password })).pipe(
           map(({ user, session, error }) => {
             if (error) {
               return AuthActions.loginFailure({ error });
@@ -41,21 +41,15 @@ export class AuthEffects {
     this.actions$.pipe(
       ofType(AuthActions.loginWithGoogle),
       exhaustMap(() =>
-        this.authService.signInWithGoogle().pipe(
-          map(({ user, session, error }) => {
+        from(this.authService.signInWithGoogle()).pipe(
+          map(({ data, error }) => {
             if (error) {
               return AuthActions.loginFailure({ error });
             }
-            // For OAuth, Supabase handles session via redirect. The onAuthStateChange listener
-            // in AuthService will dispatch sessionUpdate. So, this success action might primarily be for navigation or UI updates.
-            // However, if the signInWithGoogle() itself can return user/session directly (e.g. if user already approved)
-            if (user && session) {
-                 return AuthActions.loginSuccess({ user, session });
+            if (data?.url) {
+              return { type: '[Auth] OAuth Flow Initiated via Google' };
             }
-            // If it only initiates redirect, we might not dispatch loginSuccess here directly
-            // but rely on onAuthStateChange. For now, let's assume it can return if session already exists.
-            // If not, this part needs adjustment based on actual Supabase behavior for immediate returns from OAuth calls.
-            return AuthActions.loginFailure({ error: { name: 'OAuthError', message: 'Google sign-in did not immediately return a session.' } as any });
+            return AuthActions.loginFailure({ error: { name: 'OAuthError', message: 'Google sign-in did not immediately return a session or redirect URL.' } as any });
           }),
           catchError((error) => of(AuthActions.loginFailure({ error })))
         )
@@ -67,7 +61,7 @@ export class AuthEffects {
     this.actions$.pipe(
       ofType(AuthActions.register),
       exhaustMap((action) =>
-        this.authService.signUpWithEmail(action.email, action.password).pipe(
+        from(this.authService.signUp({ email: action.email, password: action.password })).pipe(
           map(({ user, session, error }) => {
             if (error) {
               return AuthActions.registerFailure({ error });
@@ -85,7 +79,7 @@ export class AuthEffects {
     this.actions$.pipe(
       ofType(AuthActions.logout),
       exhaustMap(() =>
-        this.authService.signOut().pipe(
+        from(this.authService.signOut()).pipe(
           map(( {error} ) => {
             if (error) {
               return AuthActions.logoutFailure({ error });
@@ -120,29 +114,6 @@ export class AuthEffects {
       })
     ),
     { dispatch: false }
-  );
-
-  listenToAuthChanges$ = createEffect(() =>
-    this.authService.onAuthStateChange().pipe(
-      map(({ event, session }) => {
-        console.log('Auth event:', event, 'Session:', session);
-        const user = session?.user ?? null;
-        return AuthActions.sessionUpdate({ user, session });
-      })
-    )
-  );
-
-  checkAuthSession$ = createEffect(() =>
-    this.actions$.pipe(
-      ofType(AuthActions.checkAuthSession, AuthActions.setInitialAuthState), // setInitialAuthState is for when app loads
-      switchMap(() => this.authService.getCurrentSession().pipe(
-        map(session => {
-          const user = session?.user ?? null;
-          return AuthActions.sessionUpdate({ user, session });
-        }),
-        catchError(() => of(AuthActions.sessionUpdate({ user: null, session: null }))) // On error, assume no session
-      ))
-    )
   );
 
 } 

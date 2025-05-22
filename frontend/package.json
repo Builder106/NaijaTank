@@ -6,8 +6,8 @@
     "dev": "ng serve",
     "start": "ng serve",
     "build": "ng build",
-    "build:ssr": "ng run demo:server:production",
-    "dev:ssr": "ng run demo:serve-ssr"
+    "build:ssr": "ng run naijatank:server:production",
+    "dev:ssr": "ng run naijatank:serve-ssr"
   },
   "dependencies": {
     "@angular/animations": "^19.2.8",

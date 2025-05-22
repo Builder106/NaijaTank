@@ -5,7 +5,7 @@
   },
   "newProjectRoot": "projects",
   "projects": {
-    "demo": {
+    "naijatank": {
       "architect": {
         "build": {
           "builder": "@angular/build:application",
@@ -29,7 +29,7 @@
             "assets": [],
             "index": "src/index.html",
             "browser": "src/main.ts",
-            "outputPath": "dist/demo",
+            "outputPath": "dist/naijatank",
             "polyfills": ["zone.js"],
             "scripts": [],
             "styles": ["src/styles.css"],
@@ -43,10 +43,10 @@
           "builder": "@angular/build:dev-server",
           "configurations": {
             "development": {
-              "buildTarget": "demo:build:development"
+            "buildTarget": "naijatank:build:development"
             },
             "production": {
-              "buildTarget": "demo:build:production"
+              "buildTarget": "naijatank:build:production"
             }
           },
           "defaultConfiguration": "development"
