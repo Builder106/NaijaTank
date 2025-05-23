@@ -9,6 +9,9 @@ import { StoreModule } from '@ngrx/store';
 import { EffectsModule } from '@ngrx/effects';
 import { StoreDevtoolsModule } from '@ngrx/store-devtools';
 import { reducers, metaReducers } from './store'; // Import reducers and metaReducers
+import { AuthEffects } from './store/effects/auth.effects'; // Assuming AuthEffects is registered here
+import { StationEffects } from './store/effects/station.effects'; // Assuming StationEffects is registered here
+import { ReportEffects } from './store/effects/report.effects'; // Import ReportEffects
 
 // Routing
 import { AppRoutingModule } from './app-routing.module';
@@ -37,7 +40,7 @@ import { environment } from '../environments/environment';
     
     // NgRx
     StoreModule.forRoot(reducers, { metaReducers }), // Pass reducers and metaReducers
-    EffectsModule.forRoot([]), // Keep this for global effects or remove if none
+    EffectsModule.forRoot([AuthEffects, StationEffects, ReportEffects]), // Add ReportEffects here
     StoreDevtoolsModule.instrument({
       maxAge: 25, // Retains last 25 states
       logOnly: environment.production, // Restrict extension to log-only mode in production

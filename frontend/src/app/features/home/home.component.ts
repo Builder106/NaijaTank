@@ -74,11 +74,12 @@ import { Station } from '../../core/models/station.model';
                 <div class="flex-1">
                   <h3 class="text-white font-medium">{{station.name}}</h3>
                   <p class="text-sm text-white/60">
-                    {{station.fuelStatus.pms.available ? 'PMS' : ''}}
-                    {{station.fuelStatus.pms.available && station.fuelStatus.diesel.available ? ' • ' : ''}}
-                    {{station.fuelStatus.diesel.available ? 'Diesel' : ''}}
-                    {{(station.fuelStatus.pms.available || station.fuelStatus.diesel.available) ? ' • ' : ''}}
-                    {{station.distance}} km away
+                    <span *ngIf="station.fuelStatus.petrol?.available">Petrol</span>
+                    <span *ngIf="station.fuelStatus.petrol?.available && station.fuelStatus.diesel?.available"> • </span>
+                    <span *ngIf="station.fuelStatus.diesel?.available">Diesel</span>
+                    <!-- Consider adding Kerosene and Gas if desired for this summary -->
+                    <span *ngIf="(station.fuelStatus.petrol?.available || station.fuelStatus.diesel?.available) && station.distance !== null"> • </span>
+                    <span *ngIf="station.distance !== null">{{station.distance}} km away</span>
                   </p>
                 </div>
               </div>

@@ -8,7 +8,9 @@ export const loadStations = createAction(
   props<{ 
     latitude: number;
     longitude: number;
-    radius?: number;
+    radiusKm: number;
+    fuelTypes?: string[];
+    keyword?: string;
   }>()
 );
 
@@ -65,4 +67,20 @@ export const reportFuelStatusSuccess = createAction(
 export const reportFuelStatusFailure = createAction(
   '[Station] Report Fuel Status Failure',
   props<{ error: string }>()
+);
+
+// Load Single Station Details (for selected station)
+export const loadStationDetails = createAction(
+  '[Station] Load Station Details',
+  props<{ stationId: string; fuelTypes?: string[] }>() // fuelTypes can be passed if needed
+);
+
+export const loadStationDetailsSuccess = createAction(
+  '[Station API] Load Station Details Success',
+  props<{ station: Station | undefined }>()
+);
+
+export const loadStationDetailsFailure = createAction(
+  '[Station API] Load Station Details Failure',
+  props<{ error: any }>()
 );

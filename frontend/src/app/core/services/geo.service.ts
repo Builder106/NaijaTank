@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { Observable, from } from 'rxjs';
+import { Observable, from, throwError } from 'rxjs';
 import { map, catchError } from 'rxjs/operators';
 
 @Injectable({
@@ -13,14 +13,40 @@ export class GeoService {
     return from(
       new Promise<GeolocationPosition>((resolve, reject) => {
         if (!navigator.geolocation) {
-          reject(new Error('Geolocation is not supported by this browser'));
+          reject(new Error('Geolocation is not supported by this browser.'));
+          return;
         }
-        
-        navigator.geolocation.getCurrentPosition(resolve, reject, {
-          enableHighAccuracy: true,
-          timeout: 10000,
-          maximumAge: 0
-        });
+
+        navigator.geolocation.getCurrentPosition(
+          (position) => resolve(position),
+          (error) => {
+            switch (error.code) {
+              case error.PERMISSION_DENIED:
+                reject(new Error('User denied the request for Geolocation.'));
+                break;
+              case error.POSITION_UNAVAILABLE:
+                reject(new Error('Location information is unavailable.'));
+                break;
+              case error.TIMEOUT:
+                reject(new Error('The request to get user location timed out.'));
+                break;
+              default:
+                reject(new Error('An unknown error occurred while trying to get location.'));
+                break;
+            }
+          },
+          {
+            enableHighAccuracy: true,
+            timeout: 10000, // 10 seconds
+            maximumAge: 0, // Do not use a cached position
+          }
+        );
+      })
+    ).pipe(
+      catchError((error) => {
+        // Log the error or show a user-friendly message
+        console.error('Geolocation error:', error.message);
+        return throwError(() => new Error(error.message)); // Re-throw the error or a custom error
       })
     );
   }

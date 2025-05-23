@@ -23,13 +23,21 @@ import { Station } from '../../../core/models/station.model';
       </div>
       
       <div class="space-y-2">
-        <div *ngIf="station?.fuelStatus?.pms?.available" class="flex justify-between">
-          <span class="text-sm">PMS:</span>
-          <span class="font-medium">₦{{station?.fuelStatus?.pms?.price}}</span>
+        <div *ngIf="station?.fuelStatus?.petrol?.available" class="flex justify-between">
+          <span class="text-sm">Petrol:</span>
+          <span class="font-medium">₦{{station?.fuelStatus?.petrol?.price}}</span>
         </div>
         <div *ngIf="station?.fuelStatus?.diesel?.available" class="flex justify-between">
           <span class="text-sm">Diesel:</span>
           <span class="font-medium">₦{{station?.fuelStatus?.diesel?.price}}</span>
+        </div>
+        <div *ngIf="station?.fuelStatus?.kerosene?.available" class="flex justify-between">
+          <span class="text-sm">Kerosene:</span>
+          <span class="font-medium">₦{{station?.fuelStatus?.kerosene?.price}}</span>
+        </div>
+        <div *ngIf="station?.fuelStatus?.gas?.available" class="flex justify-between">
+          <span class="text-sm">Gas:</span>
+          <span class="font-medium">₦{{station?.fuelStatus?.gas?.price}}</span>
         </div>
       </div>
     </div>

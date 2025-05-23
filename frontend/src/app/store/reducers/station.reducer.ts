@@ -1,12 +1,12 @@
 import { createReducer, on } from '@ngrx/store';
-import { Station } from '../../core/models/station.model';
+import { Station, FuelStatus } from '../../core/models/station.model';
 import * as StationActions from '../actions/station.actions';
 
 export interface State {
   stations: Station[];
   selectedStation: Station | null;
   loading: boolean;
-  error: string | null;
+  error: string | any | null;
   filters: {
     fuelType: string | null;
     maxDistance: number;
@@ -31,7 +31,7 @@ export const initialState: State = {
 export const reducer = createReducer(
   initialState,
   
-  on(StationActions.loadStations, state => ({
+  on(StationActions.loadStations, StationActions.loadStationDetails, state => ({
     ...state,
     loading: true,
     error: null
@@ -43,20 +43,29 @@ export const reducer = createReducer(
     loading: false
   })),
   
-  on(StationActions.loadStationsFailure, (state, { error }) => ({
+  on(StationActions.loadStationsFailure, StationActions.loadStationDetailsFailure, (state, { error }) => ({
     ...state,
     loading: false,
     error
   })),
+
+  on(StationActions.loadStationDetailsSuccess, (state, { station }) => ({
+    ...state,
+    selectedStation: station || null,
+    loading: false,
+    error: null
+  })),
   
   on(StationActions.selectStation, (state, { stationId }) => ({
     ...state,
-    selectedStation: state.stations.find(station => station.id === stationId) || null
+    loading: true,
+    error: null
   })),
   
   on(StationActions.clearSelectedStation, state => ({
     ...state,
-    selectedStation: null
+    selectedStation: null,
+    error: null
   })),
   
   on(StationActions.updateFilters, (state, { filters }) => ({
@@ -65,18 +74,34 @@ export const reducer = createReducer(
   })),
   
   on(StationActions.reportFuelStatusSuccess, (state, { stationId, report }) => {
+    const mapFuelTypeToKey = (fuelType: 'petrol' | 'diesel' | 'kerosene' | 'gas'): keyof Station['fuelStatus'] | null => {
+      switch (fuelType) {
+        case 'petrol': return 'petrol';
+        case 'diesel': return 'diesel';
+        case 'kerosene': return 'kerosene';
+        case 'gas': return 'gas';
+        default:
+          console.warn(`Unknown fuel type in report for mapping: ${fuelType}`);
+          return null;
+      }
+    };
+
+    const fuelKey = mapFuelTypeToKey(report.fuelType);
+    if (!fuelKey) return state;
+
     const updatedStations = state.stations.map(station => {
       if (station.id === stationId) {
+        const newFuelStatus: FuelStatus = {
+          available: report.available,
+          price: report.price,
+          queueLength: report.queueLength,
+          lastUpdated: new Date().toISOString()
+        };
         return {
           ...station,
           fuelStatus: {
             ...station.fuelStatus,
-            [report.fuelType]: {
-              available: report.available,
-              price: report.price,
-              queueLength: report.queueLength,
-              lastUpdated: new Date().toISOString()
-            }
+            [fuelKey]: newFuelStatus
           },
           lastReported: new Date().toISOString()
         };
@@ -84,12 +109,15 @@ export const reducer = createReducer(
       return station;
     });
     
+    let updatedSelectedStation = state.selectedStation;
+    if (state.selectedStation && state.selectedStation.id === stationId) {
+      updatedSelectedStation = updatedStations.find(s => s.id === stationId) || null;
+    }
+
     return {
       ...state,
       stations: updatedStations,
-      selectedStation: state.selectedStation && state.selectedStation.id === stationId
-        ? updatedStations.find(s => s.id === stationId) || null
-        : state.selectedStation
+      selectedStation: updatedSelectedStation
     };
   })
 );

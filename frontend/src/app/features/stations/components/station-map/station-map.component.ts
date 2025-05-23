@@ -2,12 +2,15 @@ import { Component, OnInit, AfterViewInit, ViewChild, ElementRef, OnDestroy } fr
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { Store } from '@ngrx/store';
-import { Observable, Subscription } from 'rxjs';
+import { Observable, Subscription, of } from 'rxjs';
+import { catchError, tap, take } from 'rxjs/operators';
 import { Loader } from '@googlemaps/js-api-loader';
 import { Station } from '../../../../core/models/station.model';
 import { StationInfoCardComponent } from '../../../../shared/components/station-info-card/station-info-card.component';
 import { FilterBarComponent } from '../../../../shared/components/filter-bar/filter-bar.component';
 import { environment } from '../../../../../environments/environment';
+import * as StationActions from '../../../../store/actions/station.actions';
+import { StationService } from '../../../../core/services/station.service';
 
 interface AppState {
   stations: {
@@ -85,17 +88,19 @@ export class StationMapComponent implements OnInit, AfterViewInit, OnDestroy {
   userPosition$: Observable<{latitude: number | null, longitude: number | null}>;
   
   private map: google.maps.Map | null = null;
-  private markers: google.maps.Marker[] = [];
+  private markersData: { marker: google.maps.Marker, station: Station }[] = [];
   private subscriptions: Subscription[] = [];
   
-  constructor(private store: Store<AppState>) {
+  constructor(
+    private store: Store<AppState>,
+    private stationService: StationService
+  ) {
     this.stations$ = this.store.select(state => state.stations.stations);
     this.selectedStation$ = this.store.select(state => state.stations.selectedStation);
     this.userPosition$ = this.store.select(state => state.geolocation.currentPosition);
   }
 
   ngOnInit(): void {
-    // Initialize subscriptions
     this.subscriptions.push(
       this.stations$.subscribe(stations => {
         if (this.map) {
@@ -121,15 +126,13 @@ export class StationMapComponent implements OnInit, AfterViewInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.subscriptions.forEach(sub => sub.unsubscribe());
-    this.markers.forEach(marker => marker.setMap(null));
+    this.markersData.forEach(md => md.marker.setMap(null));
+    this.markersData = [];
   }
 
   private initializeMap(): void {
     if (!this.mapContainer) return;
-
-    // Default to Lagos coordinates
     const defaultCenter = { lat: 6.5244, lng: 3.3792 };
-
     this.map = new google.maps.Map(this.mapContainer.nativeElement, {
       center: defaultCenter,
       zoom: 12,
@@ -139,42 +142,64 @@ export class StationMapComponent implements OnInit, AfterViewInit, OnDestroy {
       fullscreenControl: false
     });
 
-    // Subscribe to user position changes
     this.subscriptions.push(
       this.userPosition$.subscribe(position => {
-        if (position.latitude && position.longitude) {
+        if (position.latitude && position.longitude && this.map?.getCenter()) {
           const userLocation = new google.maps.LatLng(position.latitude, position.longitude);
-          this.map?.setCenter(userLocation);
+          if (this.map.getCenter()?.equals(new google.maps.LatLng(defaultCenter.lat, defaultCenter.lng))) {
+            this.map?.setCenter(userLocation);
+          }
           this.updateUserMarker(userLocation);
         }
       })
     );
 
-    // Add markers for stations
-    this.stations$.subscribe(stations => {
-      this.updateMarkers(stations);
+    this.stations$.pipe(take(1)).subscribe(stations => {
+      if (stations) {
+        this.updateMarkers(stations as Station[]);
+      }
     });
   }
 
   private updateMarkers(stations: Station[]): void {
-    // Clear existing markers
-    this.markers.forEach(marker => marker.setMap(null));
-    this.markers = [];
+    this.markersData.forEach(md => md.marker.setMap(null));
+    this.markersData = [];
 
     stations.forEach(station => {
+      if (typeof station.latitude !== 'number' || typeof station.longitude !== 'number') {
+        console.warn('Station with invalid coordinates skipped:', station.name, station);
+        return;
+      }
       const marker = new google.maps.Marker({
         position: { lat: station.latitude, lng: station.longitude },
         map: this.map,
-        title: station.name,
+        title: station.name || 'Station',
         icon: this.getMarkerIcon(station)
       });
 
       marker.addListener('click', () => {
-        this.store.dispatch({ type: '[Station] Select Station', stationId: station.id });
+        this.handleMarkerClick(station);
       });
-
-      this.markers.push(marker);
+      this.markersData.push({ marker, station });
     });
+  }
+
+  private handleMarkerClick(station: Station): void {
+    if (station.source === 'google' && station.google_place_id) {
+      this.stationService.ensureStationReference(station.google_place_id).pipe(
+        tap(response => {
+          this.store.dispatch(StationActions.selectStation({ stationId: response.station_id }));
+        }),
+        catchError(err => {
+          console.error('Error ensuring station reference during marker click:', err);
+          return of(null);
+        })
+      ).subscribe();
+    } else if (station.id) {
+      this.store.dispatch(StationActions.selectStation({ stationId: station.id }));
+    } else {
+      console.error('Clicked station has no ID to select:', station);
+    }
   }
 
   private userMarker: google.maps.Marker | null = null;
@@ -199,8 +224,20 @@ export class StationMapComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   private getMarkerIcon(station: Station): google.maps.Symbol {
-    const color = station.fuelStatus.pms.available ? '#10B981' : 
-                 (station.fuelStatus.diesel.available ? '#F59E0B' : '#EF4444');
+    let color = '#A0A0A0';
+
+    if (station.fuelStatus) {
+      const petrolStatus = station.fuelStatus.petrol;
+      const dieselStatus = station.fuelStatus.diesel;
+
+      if (petrolStatus && petrolStatus.available) {
+        color = '#10B981';
+      } else if (dieselStatus && dieselStatus.available) {
+        color = '#F59E0B';
+      } else if (petrolStatus !== undefined || dieselStatus !== undefined) {
+        color = '#EF4444';
+      }
+    }
 
     return {
       path: google.maps.SymbolPath.CIRCLE,
@@ -228,7 +265,7 @@ export class StationMapComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   closeStationInfo(): void {
-    this.store.dispatch({ type: '[Station] Clear Selected Station' });
+    this.store.dispatch(StationActions.clearSelectedStation());
   }
 
   zoomIn(): void {
@@ -244,11 +281,11 @@ export class StationMapComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   centerOnUser(): void {
-    this.userPosition$.subscribe(position => {
+    this.userPosition$.pipe(take(1)).subscribe(position => {
       if (position.latitude && position.longitude && this.map) {
         this.map.panTo({ lat: position.latitude, lng: position.longitude });
         this.map.setZoom(15);
       }
-    }).unsubscribe();
+    });
   }
 }

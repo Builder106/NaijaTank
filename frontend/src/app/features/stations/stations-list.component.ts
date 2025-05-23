@@ -63,8 +63,7 @@ import { LoaderComponent } from '../../shared/components/loader/loader.component
         <div *ngIf="!(loading$ | async) && (stations$ | async) && (stations$ | async)!.length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           <app-station-card 
             *ngFor="let station of stations$ | async" 
-            [station]="station" 
-            [routerLink]="['/stations', station.id]">
+            [station]="station">
           </app-station-card>
         </div>
       </section>

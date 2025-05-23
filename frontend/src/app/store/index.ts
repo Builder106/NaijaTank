@@ -7,6 +7,7 @@ import * as fromStation from './reducers/station.reducer';
 import * as fromUser from './reducers/user.reducer';
 import * as fromGeolocation from './reducers/geolocation.reducer';
 import * as fromUi from './reducers/ui.reducer';
+import * as fromReport from './reducers/report.reducer';
 
 export interface AppState {
   auth: AuthState;
@@ -14,6 +15,7 @@ export interface AppState {
   user: fromUser.State;
   geolocation: fromGeolocation.State;
   ui: fromUi.State;
+  report: fromReport.ReportState;
 }
 
 export const reducers: ActionReducerMap<AppState> = {
@@ -21,7 +23,8 @@ export const reducers: ActionReducerMap<AppState> = {
   stations: fromStation.reducer,
   user: fromUser.reducer,
   geolocation: fromGeolocation.reducer,
-  ui: fromUi.reducer
+  ui: fromUi.reducer,
+  report: fromReport.reportReducer
 };
 
 // Meta-reducer for logging in development (optional)
