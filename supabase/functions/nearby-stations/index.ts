@@ -1,7 +1,8 @@
 // TODO: Use latest JSR packages
-import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-import { GasStationBrand } from "../_shared/types.ts"; // Import the enum
+import { createClient } from "jsr:@supabase/supabase-js";
+import { GoogleGenAI, Schema } from 'https://esm.sh/@google/genai';
+import { GasStationBrand, FuelPrices } from "../_shared/types.ts";
+import { getBrandDetails, EnrichedBrandDetails } from "../_shared/brand-details.ts";
 
 const PLACES_API_URL = "https://places.googleapis.com/v1/places:searchNearby";
 
@@ -27,14 +28,6 @@ interface DbStation {
   google_place_id: string;
   source_type: string;
 }
-
-// interface GooglePlaceGeometry {
-//   location?: {
-//     latitude: number;
-//     longitude: number;
-//   };
-//   // Other geometry fields like viewport if needed
-// }
 
 interface GooglePlaceResultItem {
   id: string;
@@ -77,7 +70,6 @@ interface GoogleApiRequestBody { // New interface for the Google API request bod
   regionCode?: string; // Optional
   rankPreference?: 'DISTANCE' | 'POPULARITY'; // Optional
 }
-// --- END NEW TYPE DEFINITIONS ---
 
 interface StationOutput {
   id: string | number;
@@ -89,7 +81,8 @@ interface StationOutput {
   google_place_id: string | null;
   brand: GasStationBrand | null; // Updated to use the enum
   website?: string | null; // Added for lookup table result
-  fuel_prices?: any | null; // Added for lookup table result (can be more specific later)
+  fuel_prices?: FuelPrices | null; // Replaced any with FuelPrices
+  logoUrl?: string | null; // For Brandfetch URL
 }
 
 interface RequestPayload {
@@ -98,13 +91,105 @@ interface RequestPayload {
   radius_km: number;
   type?: string;
 }
+// --- END NEW TYPE DEFINITIONS ---
 
-serve(async (req: Request)=>{
+// --- START HELPER FUNCTION FOR BATCH LLM with Structured Output ---
+async function determineBrandsForMultipleStations(
+  stationNames: string[],
+  apiKey: string | undefined
+): Promise<Record<string, GasStationBrand>> {
+  const results: Record<string, GasStationBrand> = {};
+  stationNames.forEach(name => results[name] = GasStationBrand.Unknown);
+
+  if (!apiKey) {
+    console.warn("GEMINI_API_KEY is not set. Cannot determine brands. All falling back to Unknown.");
+    return results;
+  }
+  if (stationNames.length === 0) {
+    return results;
+  }
+
+  try {
+    const genAI = new GoogleGenAI({apiKey:apiKey});
+
+    const stationBrandPropertySchema = {
+      type: "STRING", // Use string literal
+      enum: Object.values(GasStationBrand), 
+    };
+
+    const dynamicProperties: Record<string, typeof stationBrandPropertySchema> = {};
+    stationNames.forEach(name => {
+      dynamicProperties[name] = stationBrandPropertySchema;
+    });
+
+    const responseSchema = {
+      type: "OBJECT", // Use string literal
+      properties: dynamicProperties,
+      required: stationNames, 
+    };
+
+    const stationNamesListForPrompt = stationNames.map(name => `\"${name}\"`).join(", ");
+    const brandEnumValuesForPrompt = Object.values(GasStationBrand).join(", ");
+
+    const prompt = 
+      `For each gas station name in the list [${stationNamesListForPrompt}], determine its brand. ` +
+      `The possible brands are: ${brandEnumValuesForPrompt}. ` +
+      `If a name clearly matches one of these brands, use that brand. ` +
+      `If a name appears to be a gas station but doesn't match a specific brand from the list, use "${GasStationBrand.Other}". ` +
+      `If a name is too generic (e.g., "Service Station") or clearly not a gas station, use "${GasStationBrand.Unknown}". ` +
+      `Your response must be a JSON object structured according to the provided schema.`;
+
+    const generationResult = await genAI.models.generateContent({
+        model: "gemini-2.5-flash-preview-05-20",
+        contents: [{ role: "user", parts: [{ text: prompt }] }],
+        config: {
+            responseMimeType: "application/json",
+            responseSchema: responseSchema as Schema,
+        }
+    });
+
+    const responseText = generationResult.text ? generationResult.text.trim() : "";
+
+    let llmResults: Record<string, string>;
+    try {
+      llmResults = JSON.parse(responseText);
+    } catch (parseError) {
+      console.error("Error parsing LLM JSON response:", parseError, "\nResponse was:", responseText);
+      return results; 
+    }
+
+    for (const name of stationNames) {
+      const llmBrandString = llmResults[name];
+      if (llmBrandString) {
+        const determinedBrand = Object.values(GasStationBrand).find(
+          brand => brand.toLowerCase() === llmBrandString.toLowerCase()
+        );
+        if (determinedBrand) {
+          results[name] = determinedBrand;
+        } else {
+          console.warn(`LLM (schema) returned a brand "${llmBrandString}" not in GasStationBrand enum for station: "${name}". Defaulting to Other.`);
+          results[name] = GasStationBrand.Other;
+        }
+      } else {
+        console.warn(`LLM (schema) response did not contain an entry for station: "${name}". Keeping Unknown.`);
+      }
+    }
+    return results;
+
+  } catch (error) {
+    console.error("Error calling Gemini API for batch brand determination (schema):", error);
+    return results;
+  }
+}
+// --- END HELPER FUNCTION FOR BATCH LLM ---
+
+Deno.serve(async (req: Request)=>{
   try {
     // Early exit if critical environment variables are not set
     const supabaseUrl = Deno.env.get("SUPABASE_URL");
     const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY");
     const googleMapsApiKey = Deno.env.get("GOOGLE_MAPS_API_KEY");
+    const geminiApiKey = Deno.env.get("GEMINI_API_KEY");
 
     if (!supabaseUrl) {
       console.error("Missing environment variable: SUPABASE_URL");
@@ -124,9 +209,12 @@ serve(async (req: Request)=>{
         status: 500, headers: { "Content-Type": "application/json" },
       });
     }
+    if (!geminiApiKey) {
+      console.warn("Warning: GEMINI_API_KEY environment variable is not set. Brand determination via LLM will be limited.");
+    }
 
     const supabase = createClient(supabaseUrl, supabaseAnonKey);
-    const { lat, lng, radius_km, type }: Omit<Partial<RequestPayload>, 'keyword'> = await req.json();
+    const { lat, lng, radius_km, type }: Partial<RequestPayload> = await req.json();
 
     if (!lat || !lng || !radius_km) {
       return new Response(JSON.stringify({ error: "Missing required parameters: lat, lng, radius_km" }), {
@@ -149,6 +237,8 @@ serve(async (req: Request)=>{
       // Depending on desired behavior, you might return an error or continue to Google Places
       } else if (dbStationsData) {
         const formattedDbStations = (dbStationsData as DbStation[]).map((s: DbStation): StationOutput => {
+          const brandEnum = GasStationBrand[s.brand as keyof typeof GasStationBrand] || GasStationBrand.Unknown;
+          const brandInfo: EnrichedBrandDetails | undefined = getBrandDetails(brandEnum);
           return {
             id: s.id,
             name: s.name,
@@ -157,7 +247,10 @@ serve(async (req: Request)=>{
             source: 'db' as const,
             address: s.address,
             google_place_id: s.google_place_id,
-            brand: GasStationBrand[s.brand as keyof typeof GasStationBrand] || GasStationBrand.Unknown // Convert string from DB to enum
+            brand: brandEnum,
+            website: brandInfo?.website ?? null,
+            fuel_prices: brandInfo?.defaultFuelPrices ?? null,
+            logoUrl: brandInfo?.brandfetchLogoUrl ?? null,
           };
         });
 
@@ -172,10 +265,11 @@ serve(async (req: Request)=>{
       console.error("Exception fetching from DB:", e);
     }
     // 2. Query Google Places API
+    let googlePlaceItemsToProcess: GooglePlaceResultItem[] = [];
     try {
       // Construct the request body for Google Places API
       const requestBody: GoogleApiRequestBody = {
-        includedTypes: type ? [type] : undefined, 
+        includedTypes: type ? [type] : ["gas_station"], // Default to gas_station if no type
         maxResultCount: 20, 
         locationRestriction: {
           circle: {
@@ -208,57 +302,51 @@ serve(async (req: Request)=>{
       } else {
         const googleData = await googleResponse.json() as GooglePlacesApiResponse;
         if (googleData.places) {
-          const googleStations = googleData.places
-            .map((place: GooglePlaceResultItem): StationOutput | null => { // Allow returning null
-              const lat = place.location?.latitude;
-              const lng = place.location?.longitude;
-
-              if (typeof lat !== 'number' || typeof lng !== 'number') {
-                console.warn(`Google Place item ${place.id} (${place.displayName.text}) is missing valid coordinates. Skipping.`);
-                return null; // Skip this item
-              }
-
-              // Placeholder for LLM call to determine brand
-              // const determinedBrand: GasStationBrand = await callGeminiLLM(place.displayName.text);
-              // For now, we'll default to Unknown, you'll replace this
-              const determinedBrand: GasStationBrand = GasStationBrand.Unknown;
-
-              // Placeholder for lookup table to get website and fuel prices
-              // const brandDetails = await getBrandDetails(determinedBrand);
-
-              return {
-                id: place.id,
-                name: place.displayName.text,
-                latitude: lat,
-                longitude: lng,
-                address: place.formattedAddress || null,
-                google_place_id: place.id,
-                source: 'google' as const,
-                brand: determinedBrand, // Use the determined brand
-                // website: brandDetails?.website, // Populate from lookup
-                // fuel_prices: brandDetails?.fuel_prices // Populate from lookup
-              };
-            })
-            .filter((station): station is StationOutput => station !== null); // Type guard to filter out nulls and satisfy TS
-
-          googleStations.forEach((gStation: StationOutput)=>{ // Renamed to gStation for clarity
-            // Only add Google station if its google_place_id has not been processed (i.e., not found in DB with that ID)
-            // And ensure it actually has a google_place_id to check against the set
-            if (gStation.google_place_id && !processedGooglePlaceIds.has(gStation.google_place_id)) {
-              allStations.push(gStation);
-              // No need to add gStation.google_place_id to processedGooglePlaceIds here again,
-              // as Google results are generally unique by place_id for a single query.
-              // If merging/enrichment was happening, this might be different.
-            } else if (!gStation.google_place_id) {
-              // This case should ideally not happen if Google always provides a place_id for valid results
-              console.warn("Google Place missing google_place_id after mapping:", gStation.name);
+          googlePlaceItemsToProcess = googleData.places.filter(place => {
+            const placeLat = place.location?.latitude;
+            const placeLng = place.location?.longitude;
+            if (typeof placeLat !== 'number' || typeof placeLng !== 'number') {
+              console.warn(`Google Place item ${place.id} (${place.displayName.text}) is missing valid coordinates. Skipping initial filter.`);
+              return false;
             }
+            if (place.id && processedGooglePlaceIds.has(place.id)) {
+              return false; // Skip if already processed from DB
+            }
+            return true;
           });
         }
       }
     } catch (e) {
       console.error("Exception fetching from Google Places:", e);
     }
+
+    // 3. Determine brands for new Google Places items using batch LLM call
+    const stationNamesToQuery = googlePlaceItemsToProcess.map(p => p.displayName.text);
+    let brandResults: Record<string, GasStationBrand> = {};
+
+    if (stationNamesToQuery.length > 0) {
+      brandResults = await determineBrandsForMultipleStations(stationNamesToQuery, geminiApiKey);
+    }
+
+    // 4. Add Google Place items to allStations with determined brands
+    for (const place of googlePlaceItemsToProcess) {
+      const determinedBrand = brandResults[place.displayName.text] || GasStationBrand.Unknown;
+      const brandInfo: EnrichedBrandDetails | undefined = getBrandDetails(determinedBrand);
+      allStations.push({
+        id: place.id,
+        name: place.displayName.text,
+        latitude: place.location!.latitude, // Already checked in filter
+        longitude: place.location!.longitude, // Already checked in filter
+        address: place.formattedAddress ?? null,
+        google_place_id: place.id,
+        source: 'google' as const,
+        brand: determinedBrand,
+        website: brandInfo?.website ?? null,
+        fuel_prices: brandInfo?.defaultFuelPrices ?? null,
+        logoUrl: brandInfo?.brandfetchLogoUrl ?? null,
+      });
+    }
+
     return new Response(JSON.stringify(allStations), {
       headers: {
         "Content-Type": "application/json",

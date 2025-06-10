@@ -1,4 +1,3 @@
-import { serve } from "https://deno.land/std@0.175.0/http/server.ts";
 import { corsHeaders } from '../_shared/cors.ts'; // Assuming a shared CORS setup
 
 const GOOGLE_MAPS_API_KEY = Deno.env.get("GOOGLE_MAPS_API_KEY");
@@ -32,7 +31,7 @@ const FIELD_MASK = [
   'fuelOptions' // Enterprise SKU
 ].join(',');
 
-serve(async (req: Request) => {
+Deno.serve(async (req: Request) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
