@@ -5,5 +5,5 @@ node_modules
 dist
 email_templates/
 environment.development.ts
-environment.prod.ts
+environment.production.ts
 NaijaTank_Development_Phases.md

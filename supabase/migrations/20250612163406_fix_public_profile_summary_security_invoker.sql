@@ -1,0 +1,1 @@
+ALTER VIEW public.public_profile_summary SET (security_invoker = true);

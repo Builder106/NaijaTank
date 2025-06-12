@@ -36,6 +36,6 @@ export function logger(reducer: (state: AppState | undefined, action: any) => Ap
   };
 }
 
-export const metaReducers: MetaReducer<AppState>[] = !environment.production
+export const metaReducers: MetaReducer<AppState>[] = !environment
   ? [logger] // Add logger only in development
   : [];
