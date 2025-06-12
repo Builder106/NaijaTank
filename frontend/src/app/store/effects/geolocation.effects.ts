@@ -42,7 +42,8 @@ export class GeolocationEffects {
       map(({ position }) => 
         StationActions.loadStations({
           latitude: position.coords.latitude,
-          longitude: position.coords.longitude
+          longitude: position.coords.longitude,
+          radiusKm: 5
         })
       )
     )
@@ -64,7 +65,7 @@ export class GeolocationEffects {
     this.actions$.pipe(
       ofType(GeolocationActions.setManualLocation),
       map(({ latitude, longitude }) => 
-        StationActions.loadStations({ latitude, longitude })
+        StationActions.loadStations({ latitude, longitude, radiusKm: 5 })
       )
     )
   );

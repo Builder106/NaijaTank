@@ -3,8 +3,11 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { Store } from '@ngrx/store';
 import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { AppState } from '../../store';
 import { Station } from '../../core/models/station.model';
+import * as StationSelectors from '../../store/selectors/station.selectors';
+import * as StationActions from '../../store/actions/station.actions';
 import { StationCardComponent } from '../../shared/components/station-card/station-card.component';
 import { FilterBarComponent } from '../../shared/components/filter-bar/filter-bar.component';
 import { LoaderComponent } from '../../shared/components/loader/loader.component';
@@ -24,7 +27,7 @@ import { LoaderComponent } from '../../shared/components/loader/loader.component
       <header class="bg-primary-500 text-white p-4">
         <div class="container mx-auto">
           <h1 class="text-2xl font-bold">Nearby Stations</h1>
-          <p class="text-sm opacity-90">Showing results within {{maxDistance}} km</p>
+          <p class="text-sm opacity-90" *ngIf="filters$ | async as filters">Showing results within {{ filters.maxDistance }} km</p>
         </div>
       </header>
       
@@ -49,7 +52,11 @@ import { LoaderComponent } from '../../shared/components/loader/loader.component
           <app-loader></app-loader>
         </div>
         
-        <div *ngIf="!(loading$ | async) && (stations$ | async)?.length === 0" class="text-center py-8">
+        <div *ngIf="error$ | async as error" class="text-center py-8 text-red-600 bg-red-100 p-4 rounded-md">
+          <p>Error loading stations: {{ error.message || error }}</p>
+        </div>
+        
+        <div *ngIf="!(loading$ | async) && !(error$ | async) && (stations$ | async)?.length === 0" class="text-center py-8">
           <div class="bg-white rounded-lg p-6 shadow-md max-w-md mx-auto">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-12 h-12 mx-auto text-gray-400 mb-4">
               <path stroke-linecap="round" stroke-linejoin="round" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
@@ -60,10 +67,11 @@ import { LoaderComponent } from '../../shared/components/loader/loader.component
           </div>
         </div>
         
-        <div *ngIf="!(loading$ | async) && (stations$ | async) && (stations$ | async)!.length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div *ngIf="!(loading$ | async) && !(error$ | async) && (stations$ | async) && (stations$ | async)!.length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           <app-station-card 
             *ngFor="let station of stations$ | async" 
-            [station]="station">
+            [station]="station"
+            (stationSelected)="onStationSelected($event)">
           </app-station-card>
         </div>
       </section>
@@ -73,16 +81,48 @@ import { LoaderComponent } from '../../shared/components/loader/loader.component
 export class StationsListComponent implements OnInit {
   stations$: Observable<Station[]>;
   loading$: Observable<boolean>;
-  maxDistance: number = 20; // Default radius
+  error$: Observable<any | null>;
+  filters$: Observable<StationSelectors.StationState['filters']>; // For maxDistance in template
 
   constructor(private store: Store<AppState>) {
-    this.stations$ = this.store.select(state => state.stations.stations);
-    this.loading$ = this.store.select(state => state.stations.loading);
-    this.store.select(state => state.stations.filters.maxDistance)
-      .subscribe(distance => this.maxDistance = distance);
+    this.stations$ = this.store.select(StationSelectors.selectAllStations);
+    this.loading$ = this.store.select(StationSelectors.selectStationsLoading);
+    this.error$ = this.store.select(StationSelectors.selectStationsError);
+    this.filters$ = this.store.select(StationSelectors.selectStationFilters);
   }
 
   ngOnInit(): void {
-    // If needed, we could dispatch an action to load stations here
+    // Dispatch action to load stations if not already loaded,
+    // e.g., based on current geo-location or default.
+    // This typically happens in a higher-level component or route guard/resolver
+    // For now, assume stations are loaded based on user's location interaction elsewhere.
+  }
+
+  onStationSelected(station: Station): void {
+    this.store.dispatch(StationActions.selectStation({ stationId: station.id }));
+
+    // If it's a Google-sourced station and details haven't been fetched yet,
+    // and it's not currently linking or loading details, trigger detail fetch.
+    if (
+      station.source === 'google' && 
+      station.google_place_id &&
+      !station.detailsFetched &&
+      !station.isLinking
+    ) {
+      // We might want to check individual loading state here if available
+      // this.store.select(StationSelectors.selectStationDetailsLoading(station.id)).pipe(take(1)).subscribe(isLoading => {
+      //   if (!isLoading) {
+      //     this.store.dispatch(StationActions.triggerGooglePlaceDetailsFetch({ stationId: station.id, placeId: station.google_place_id! }));
+      //   }
+      // });
+      // For simplicity now, dispatching directly. Reducer/Effects should handle ongoing operations.
+      this.store.dispatch(StationActions.triggerGooglePlaceDetailsFetch({ stationId: station.id, placeId: station.google_place_id }));
+    } else if (station.source === 'db' && !station.detailsFetched) {
+      // Optionally, if DB stations might also need a separate detail fetch action
+      // this.store.dispatch(StationActions.loadStationDetails({ stationId: station.id }));
+      // For now, assuming loadStationDetails is for refreshing or explicit detail view
+    }
+    // Navigation to a detail page would happen here or be handled by the card itself via routerLink
+    // e.g., this.router.navigate(['/stations', station.id]);
   }
 }

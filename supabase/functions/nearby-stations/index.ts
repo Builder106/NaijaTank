@@ -3,6 +3,7 @@ import { createClient } from "jsr:@supabase/supabase-js";
 import { GoogleGenAI, Schema } from 'https://esm.sh/@google/genai';
 import { GasStationBrand, FuelPrices } from "../_shared/types.ts";
 import { getBrandDetails, EnrichedBrandDetails } from "../_shared/brand-details.ts";
+import { corsHeaders } from "../_shared/cors.ts"; // Import shared CORS headers
 
 const PLACES_API_URL = "https://places.googleapis.com/v1/places:searchNearby";
 
@@ -183,7 +184,12 @@ async function determineBrandsForMultipleStations(
 }
 // --- END HELPER FUNCTION FOR BATCH LLM ---
 
-Deno.serve(async (req: Request)=>{
+Deno.serve(async (req: Request) => {
+  // Handle OPTIONS preflight request
+  if (req.method === "OPTIONS") {
+    return new Response("ok", { headers: corsHeaders, status: 204 });
+  }
+
   try {
     // Early exit if critical environment variables are not set
     const supabaseUrl = Deno.env.get("SUPABASE_URL");
@@ -194,19 +200,19 @@ Deno.serve(async (req: Request)=>{
     if (!supabaseUrl) {
       console.error("Missing environment variable: SUPABASE_URL");
       return new Response(JSON.stringify({ error: "Server configuration error: SUPABASE_URL is not set." }), {
-        status: 500, headers: { "Content-Type": "application/json" },
+        status: 500, headers: { "Content-Type": "application/json", ...corsHeaders },
       });
     }
     if (!supabaseAnonKey) {
       console.error("Missing environment variable: SUPABASE_ANON_KEY");
       return new Response(JSON.stringify({ error: "Server configuration error: SUPABASE_ANON_KEY is not set." }), {
-        status: 500, headers: { "Content-Type": "application/json" },
+        status: 500, headers: { "Content-Type": "application/json", ...corsHeaders },
       });
     }
     if (!googleMapsApiKey) {
       console.error("Missing environment variable: GOOGLE_MAPS_API_KEY");
       return new Response(JSON.stringify({ error: "Server configuration error: GOOGLE_MAPS_API_KEY is not set." }), {
-        status: 500, headers: { "Content-Type": "application/json" },
+        status: 500, headers: { "Content-Type": "application/json", ...corsHeaders },
       });
     }
     if (!geminiApiKey) {
@@ -218,7 +224,7 @@ Deno.serve(async (req: Request)=>{
 
     if (!lat || !lng || !radius_km) {
       return new Response(JSON.stringify({ error: "Missing required parameters: lat, lng, radius_km" }), {
-        status: 400, headers: { "Content-Type": "application/json" },
+        status: 400, headers: { "Content-Type": "application/json", ...corsHeaders },
       });
     }
 
@@ -350,7 +356,7 @@ Deno.serve(async (req: Request)=>{
     return new Response(JSON.stringify(allStations), {
       headers: {
         "Content-Type": "application/json",
-        "Access-Control-Allow-Origin": "*"
+        ...corsHeaders
       },
       status: 200
     });
@@ -365,7 +371,8 @@ Deno.serve(async (req: Request)=>{
     }), {
       status: 500,
       headers: {
-        "Content-Type": "application/json"
+        "Content-Type": "application/json",
+        ...corsHeaders
       }
     });
   }

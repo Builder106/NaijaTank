@@ -2,5 +2,8 @@
 node_modules
 .angular
 .env
+dist
 email_templates/
+environment.development.ts
+environment.prod.ts
 NaijaTank_Development_Phases.md

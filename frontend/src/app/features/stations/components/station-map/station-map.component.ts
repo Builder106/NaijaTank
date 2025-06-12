@@ -3,27 +3,16 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { Store } from '@ngrx/store';
 import { Observable, Subscription, of } from 'rxjs';
-import { catchError, tap, take } from 'rxjs/operators';
+import { catchError, tap, take, filter } from 'rxjs/operators';
 import { Loader } from '@googlemaps/js-api-loader';
 import { Station } from '../../../../core/models/station.model';
+import { AppState } from '../../../../store';
+import * as StationSelectors from '../../../../store/selectors/station.selectors';
+import * as StationActions from '../../../../store/actions/station.actions';
+import * as GeolocationSelectors from '../../../../store/selectors/geolocation.selectors';
 import { StationInfoCardComponent } from '../../../../shared/components/station-info-card/station-info-card.component';
 import { FilterBarComponent } from '../../../../shared/components/filter-bar/filter-bar.component';
 import { environment } from '../../../../../environments/environment';
-import * as StationActions from '../../../../store/actions/station.actions';
-import { StationService } from '../../../../core/services/station.service';
-
-interface AppState {
-  stations: {
-    stations: Station[];
-    selectedStation: Station | null;
-  };
-  geolocation: {
-    currentPosition: {
-      latitude: number | null;
-      longitude: number | null;
-    }
-  }
-}
 
 @Component({
   selector: 'app-station-map',
@@ -44,9 +33,11 @@ interface AppState {
       
       <!-- Station Info Card -->
       <app-station-info-card 
-        *ngIf="selectedStation$ | async"
-        [station]="selectedStation$ | async"
-        class="absolute bottom-4 left-4 right-4 z-10"
+        *ngIf="selectedStation$ | async as selStation"
+        [station]="selStation"
+        [isLoadingDetails]="(selStation && (stationDetailsLoading[selStation.id] | async)) || false"
+        [isLinking]="(selStation && (stationLinking[selStation.id] | async)) || false"
+        class="absolute bottom-4 left-4 right-4 z-10 shadow-lg"
         (close)="closeStationInfo()">
       </app-station-info-card>
       
@@ -86,33 +77,61 @@ export class StationMapComponent implements OnInit, AfterViewInit, OnDestroy {
   stations$: Observable<Station[]>;
   selectedStation$: Observable<Station | null>;
   userPosition$: Observable<{latitude: number | null, longitude: number | null}>;
+  loadingStations$: Observable<boolean>;
+  errorStations$: Observable<any | null>;
+
+  stationDetailsLoading: { [stationId: string]: Observable<boolean> } = {};
+  stationLinking: { [stationId: string]: Observable<boolean> } = {};
   
   private map: google.maps.Map | null = null;
   private markersData: { marker: google.maps.Marker, station: Station }[] = [];
-  private subscriptions: Subscription[] = [];
+  private subscriptions: Subscription = new Subscription();
   
-  constructor(
-    private store: Store<AppState>,
-    private stationService: StationService
-  ) {
-    this.stations$ = this.store.select(state => state.stations.stations);
-    this.selectedStation$ = this.store.select(state => state.stations.selectedStation);
-    this.userPosition$ = this.store.select(state => state.geolocation.currentPosition);
+  constructor(private store: Store<AppState>) {
+    this.stations$ = this.store.select(StationSelectors.selectAllStations);
+    this.selectedStation$ = this.store.select(StationSelectors.selectCurrentStation);
+    this.userPosition$ = this.store.select(GeolocationSelectors.selectCurrentPosition);
+    this.loadingStations$ = this.store.select(StationSelectors.selectStationsLoading);
+    this.errorStations$ = this.store.select(StationSelectors.selectStationsError);
   }
 
   ngOnInit(): void {
-    this.subscriptions.push(
+    this.subscriptions.add(
       this.stations$.subscribe(stations => {
         if (this.map) {
           this.updateMarkers(stations);
         }
+        stations.forEach(station => {
+          if (!this.stationDetailsLoading[station.id]) {
+            this.stationDetailsLoading[station.id] = this.store.select(StationSelectors.selectStationDetailsLoading(station.id));
+          }
+          if (!this.stationLinking[station.id]) {
+            this.stationLinking[station.id] = this.store.select(StationSelectors.selectStationLinking(station.id));
+          }
+        });
       })
     );
+
+    this.subscriptions.add(this.selectedStation$.subscribe(station => {
+      if (station && this.map) {
+        const correspondingMarkerData = this.markersData.find(md => md.station.id === station.id);
+        if (correspondingMarkerData) {
+          // Example: Pan to marker or increase its z-index
+          // this.map.panTo(correspondingMarkerData.marker.getPosition()!);
+          // For now, info card visibility is handled by *ngIf
+        }
+      }
+    }));
   }
 
   async ngAfterViewInit(): Promise<void> {
+    const apiKey = environment.googleMapsApiKey;
+    if (!apiKey) {
+      console.error('Google Maps API Key is missing in environment configuration. Maps functionality may be degraded or unavailable.');
+    }
+
     const loader = new Loader({
-      apiKey: environment.googleMapsApiKey,
+      apiKey: apiKey || '',
       version: 'weekly'
     });
 
@@ -125,7 +144,7 @@ export class StationMapComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
-    this.subscriptions.forEach(sub => sub.unsubscribe());
+    this.subscriptions.unsubscribe();
     this.markersData.forEach(md => md.marker.setMap(null));
     this.markersData = [];
   }
@@ -142,10 +161,10 @@ export class StationMapComponent implements OnInit, AfterViewInit, OnDestroy {
       fullscreenControl: false
     });
 
-    this.subscriptions.push(
-      this.userPosition$.subscribe(position => {
-        if (position.latitude && position.longitude && this.map?.getCenter()) {
-          const userLocation = new google.maps.LatLng(position.latitude, position.longitude);
+    this.subscriptions.add(
+      this.userPosition$.pipe(filter(pos => pos.latitude !== null && pos.longitude !== null)).subscribe(position => {
+        if (this.map?.getCenter()) {
+          const userLocation = new google.maps.LatLng(position.latitude!, position.longitude!);
           if (this.map.getCenter()?.equals(new google.maps.LatLng(defaultCenter.lat, defaultCenter.lng))) {
             this.map?.setCenter(userLocation);
           }
@@ -185,20 +204,21 @@ export class StationMapComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   private handleMarkerClick(station: Station): void {
-    if (station.source === 'google' && station.google_place_id) {
-      this.stationService.ensureStationReference(station.google_place_id).pipe(
-        tap(response => {
-          this.store.dispatch(StationActions.selectStation({ stationId: response.station_id }));
-        }),
-        catchError(err => {
-          console.error('Error ensuring station reference during marker click:', err);
-          return of(null);
-        })
-      ).subscribe();
-    } else if (station.id) {
       this.store.dispatch(StationActions.selectStation({ stationId: station.id }));
-    } else {
-      console.error('Clicked station has no ID to select:', station);
+
+    if (
+      station.source === 'google' &&
+      station.google_place_id &&
+      !station.detailsFetched
+    ) {
+      this.store.select(StationSelectors.selectStationStateById(station.id)).pipe(take(1)).subscribe(sState => {
+        if (!sState.loadingDetails && !sState.linking) {
+          this.store.dispatch(StationActions.triggerGooglePlaceDetailsFetch({ 
+            stationId: station.id, 
+            placeId: station.google_place_id! 
+          }));
+        }
+      });
     }
   }
 
@@ -226,27 +246,29 @@ export class StationMapComponent implements OnInit, AfterViewInit, OnDestroy {
   private getMarkerIcon(station: Station): google.maps.Symbol {
     let color = '#A0A0A0';
 
-    if (station.fuelStatus) {
-      const petrolStatus = station.fuelStatus.petrol;
-      const dieselStatus = station.fuelStatus.diesel;
+    const hasPetrol = station.fuelStatus?.petrol?.available;
+    const hasDiesel = station.fuelStatus?.diesel?.available;
 
-      if (petrolStatus && petrolStatus.available) {
+    if (hasPetrol) {
         color = '#10B981';
-      } else if (dieselStatus && dieselStatus.available) {
+    } else if (hasDiesel) {
         color = '#F59E0B';
-      } else if (petrolStatus !== undefined || dieselStatus !== undefined) {
+    } else if (station.fuelStatus?.petrol !== undefined || station.fuelStatus?.diesel !== undefined) {
         color = '#EF4444';
-      }
+    } else if (station.rawFuelPrices) {
+      if (station.rawFuelPrices.petrol && station.rawFuelPrices.petrol > 0) color = '#10B981';
+      else if (station.rawFuelPrices.diesel && station.rawFuelPrices.diesel > 0) color = '#F59E0B';
     }
 
     return {
       path: google.maps.SymbolPath.CIRCLE,
-      scale: 10,
+      scale: 8,
       fillColor: color,
-      fillOpacity: 1,
+      fillOpacity: 0.9,
       strokeColor: '#ffffff',
-      strokeWeight: 2
-    };
+      strokeWeight: 1.5,
+      labelOrigin: new google.maps.Point(0, 2.5)
+    } as google.maps.Symbol;
   }
 
   private getMapStyles(): google.maps.MapTypeStyle[] {
@@ -281,9 +303,9 @@ export class StationMapComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   centerOnUser(): void {
-    this.userPosition$.pipe(take(1)).subscribe(position => {
-      if (position.latitude && position.longitude && this.map) {
-        this.map.panTo({ lat: position.latitude, lng: position.longitude });
+    this.userPosition$.pipe(take(1), filter(pos => pos.latitude !== null && pos.longitude !== null)).subscribe(position => {
+      if (this.map) {
+        this.map.panTo({ lat: position.latitude!, lng: position.longitude! });
         this.map.setZoom(15);
       }
     });

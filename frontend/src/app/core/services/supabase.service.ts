@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
-import { environment } from '../../../environments/environment'; // Adjusted path
+import { environment } from '../../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
@@ -14,7 +14,8 @@ export class SupabaseService {
     const supabaseKey = environment.supabaseKey;
     
     if (!supabaseUrl || !supabaseKey) {
-      console.error('Supabase URL or key is missing in environment configuration');
+      // console.error('Supabase URL or key is missing in environment configuration');
+      throw new Error('Supabase URL or key is missing in environment configuration. Check your .env file or server environment variables.');
     }
     
     this.supabase = createClient(

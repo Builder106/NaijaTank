@@ -69,16 +69,16 @@ import { Station } from '../../core/models/station.model';
                  class="bg-primary-800/50 backdrop-blur rounded-xl p-4 border border-primary-700">
               <div class="flex items-center gap-4">
                 <div class="w-12 h-12 rounded-full bg-primary-700 flex items-center justify-center text-white">
-                  {{station.brand.charAt(0)}}
+                  {{station.brand?.charAt(0)}}
                 </div>
                 <div class="flex-1">
                   <h3 class="text-white font-medium">{{station.name}}</h3>
                   <p class="text-sm text-white/60">
-                    <span *ngIf="station.fuelStatus.petrol?.available">Petrol</span>
-                    <span *ngIf="station.fuelStatus.petrol?.available && station.fuelStatus.diesel?.available"> • </span>
-                    <span *ngIf="station.fuelStatus.diesel?.available">Diesel</span>
+                    <span *ngIf="station.fuelStatus?.petrol?.available">Petrol</span>
+                    <span *ngIf="station.fuelStatus?.petrol?.available && station.fuelStatus?.diesel?.available"> • </span>
+                    <span *ngIf="station.fuelStatus?.diesel?.available">Diesel</span>
                     <!-- Consider adding Kerosene and Gas if desired for this summary -->
-                    <span *ngIf="(station.fuelStatus.petrol?.available || station.fuelStatus.diesel?.available) && station.distance !== null"> • </span>
+                    <span *ngIf="(station.fuelStatus?.petrol?.available || station.fuelStatus?.diesel?.available) && station.distance !== null"> • </span>
                     <span *ngIf="station.distance !== null">{{station.distance}} km away</span>
                   </p>
                 </div>

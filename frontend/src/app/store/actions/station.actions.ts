@@ -84,3 +84,54 @@ export const loadStationDetailsFailure = createAction(
   '[Station API] Load Station Details Failure',
   props<{ error: any }>()
 );
+
+// New Actions for Google Place Details
+export const triggerGooglePlaceDetailsFetch = createAction(
+  '[Station] Trigger Google Place Details Fetch',
+  props<{ stationId: string; placeId: string; }>() // stationId is the ID in store (could be google_place_id)
+);
+
+export const loadGooglePlaceDetails = createAction(
+  '[Station API] Load Google Place Details',
+  props<{ stationIdToUpdate: string; placeId: string; }>() 
+);
+
+export const loadGooglePlaceDetailsSuccess = createAction(
+  '[Station API] Load Google Place Details Success',
+  // Partial<Station> to merge into existing station data
+  props<{ stationIdToUpdate: string; details: Partial<Station> }>() 
+);
+
+export const loadGooglePlaceDetailsFailure = createAction(
+  '[Station API] Load Google Place Details Failure',
+  props<{ stationIdToUpdate: string; error: any }>()
+);
+
+// Updated Actions for Ensuring Station Reference with action chaining support
+export const ensureStationReference = createAction(
+  '[Station] Ensure Station Reference',
+  props<{ 
+    station: Station; 
+    onSuccessDispatchAction?: { type: string; payload?: any };
+    onFailureDispatchAction?: { type: string; payload?: any };
+  }>()
+);
+
+export const ensureStationReferenceSuccess = createAction(
+  '[Station API] Ensure Station Reference Success',
+  props<{ 
+    originalStationId: string; 
+    newStationId: string;     
+    updatedFields: Partial<Station>;
+    onSuccessDispatchAction?: { type: string; payload?: any }; // Carried over
+  }>()
+);
+
+export const ensureStationReferenceFailure = createAction(
+  '[Station API] Ensure Station Reference Failure',
+  props<{ 
+    originalStationId: string; 
+    error: any; 
+    onFailureDispatchAction?: { type: string; payload?: any }; // Carried over
+  }>()
+);

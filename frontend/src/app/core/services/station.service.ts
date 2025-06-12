@@ -1,9 +1,7 @@
 import { Injectable } from '@angular/core';
-// import { HttpClient } from '@angular/common/http'; // HttpClient likely no longer needed
-import { Observable, of, throwError, from, switchMap } from 'rxjs';
+import { Observable, throwError, from } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
-import { Station, FuelStatus, StationOperatingHours } from '../models/station.model';
-// FuelReport import is no longer needed here
+import { Station, FuelStatus } from '../models/station.model';
 import { SupabaseService } from './supabase.service';
 
 // Define the expected structure from the nearby-stations Edge Function
@@ -18,137 +16,7 @@ interface EdgeStation extends Station { // Or a more specific interface if Edge 
   providedIn: 'root'
 })
 export class StationService {
-  // private apiUrl = `${environment.apiUrl}/stations`; // Comment out or remove if not used
-  
-  // Mock data for development
-  private mockStations: Station[] = [
-    {
-      id: '1',
-      name: 'Total Energies Lekki',
-      brand: 'Total',
-      address: '12 Admiralty Way, Lekki Phase 1, Lagos',
-      latitude: 6.4281,
-      longitude: 3.4219,
-      distance: 1.2,
-      reliabilityScore: 4.5,
-      operatingHours: {
-        open: '06:00',
-        close: '22:00',
-        is24Hours: false
-      },
-      fuelStatus: {
-        petrol: {
-          available: true,
-          price: 600,
-          queueLength: 'Short',
-          lastUpdated: new Date().toISOString()
-        },
-        diesel: {
-          available: true,
-          price: 700,
-          queueLength: 'None',
-          lastUpdated: new Date().toISOString()
-        },
-        kerosene: {
-          available: false,
-          price: null,
-          queueLength: null,
-          lastUpdated: new Date().toISOString()
-        }
-      },
-      contact: {
-        phone: '+2348012345678',
-        website: 'https://totalenergies.ng'
-      },
-      lastReported: new Date().toISOString(),
-      reportCount: 15
-    },
-    {
-      id: '2',
-      name: 'NNPC Retail Ikoyi',
-      brand: 'NNPC',
-      address: '45 Awolowo Road, Ikoyi, Lagos',
-      latitude: 6.4432,
-      longitude: 3.4162,
-      distance: 2.5,
-      reliabilityScore: 3.8,
-      operatingHours: {
-        open: '00:00',
-        close: '00:00',
-        is24Hours: true
-      },
-      fuelStatus: {
-        petrol: {
-          available: true,
-          price: 580,
-          queueLength: 'Medium',
-          lastUpdated: new Date().toISOString()
-        },
-        diesel: {
-          available: true,
-          price: 680,
-          queueLength: 'Short',
-          lastUpdated: new Date().toISOString()
-        },
-        kerosene: {
-          available: true,
-          price: 800,
-          queueLength: 'None',
-          lastUpdated: new Date().toISOString()
-        }
-      },
-      contact: {
-        phone: '+2348023456789',
-        website: 'https://nnpcgroup.com'
-      },
-      lastReported: new Date().toISOString(),
-      reportCount: 8
-    },
-    {
-      id: '3',
-      name: 'Mobil Surulere',
-      brand: 'Mobil',
-      address: '24 Adeniran Ogunsanya St, Surulere, Lagos',
-      latitude: 6.5015,
-      longitude: 3.3615,
-      distance: 4.7,
-      reliabilityScore: 4.2,
-      operatingHours: {
-        open: '05:00',
-        close: '23:00',
-        is24Hours: false
-      },
-      fuelStatus: {
-        petrol: {
-          available: false,
-          price: 610,
-          queueLength: null,
-          lastUpdated: new Date().toISOString()
-        },
-        diesel: {
-          available: true,
-          price: 720,
-          queueLength: 'None',
-          lastUpdated: new Date().toISOString()
-        },
-        kerosene: {
-          available: false,
-          price: null,
-          queueLength: null,
-          lastUpdated: new Date().toISOString()
-        }
-      },
-      contact: {
-        phone: '+2348034567890',
-        website: null
-      },
-      lastReported: new Date().toISOString(),
-      reportCount: 12
-    }
-  ];
-
   constructor(
-    // private http: HttpClient, // Remove if not used elsewhere
     private supabaseService: SupabaseService
   ) {}
 
@@ -207,14 +75,22 @@ export class StationService {
           longitude: item.longitude,
           distance: item.distance, // Assuming Edge function might calculate or frontend will do it
           reliabilityScore: item.reliabilityScore, // Assuming Edge function might provide or frontend will do it
-          operatingHours: item.operatingHours || { open: 'N/A', close: 'N/A', is24Hours: false } as StationOperatingHours, // Provide default
-          fuelStatus: item.fuelStatus || {} as FuelStatus, // Provide default
-          contact: item.contact || { phone: null, website: null }, // Provide default
-          lastReported: item.lastReported || new Date(0).toISOString(),
-          reportCount: item.reportCount,
+          operatingHours: item.operatingHours || null, // Updated to null for consistency with Station model
+          fuelStatus: item.fuelStatus || null, // Updated to null
+          contact: {
+            phone: item.contact?.phone || null,
+            website: item.contact?.website || item.website || null // Prioritize contact.website, then item.website from Google
+          },
+          lastReported: item.lastReported || null, // Updated to null
+          reportCount: item.reportCount || null,
           source: item.source, // 'db' or 'google'
-          google_place_id: item.google_place_id, 
-        } as Station)); // Casting to Station, ensure your Station model can accommodate these fields (especially source and google_place_id)
+          google_place_id: item.google_place_id || (item.source === 'google' ? item.id : null),
+          logoUrl: item.logoUrl || null, // From nearby-stations if available (brand-details derived)
+          website: item.website || null, // From nearby-stations (brand-details derived or Google direct)
+          rawFuelPrices: item.fuel_prices || null, // From nearby-stations (brand-details derived)
+          // types will be populated by getGooglePlaceDetails for Google source, or part of DB record
+          // detailsFetched is a frontend state, not from backend directly
+        } as Station));
       }),
       catchError(error => {
         console.error('Error in getStations calling Edge Function:', error);
@@ -223,20 +99,14 @@ export class StationService {
     );
   }
 
-  // getStationById needs to be refactored to handle both DB and Google Place IDs
-  // and potentially fetch from Google Places API for google_place_id if not fully detailed by nearby-stations
-  getStationById(id: string, source?: 'db' | 'google'): Observable<Station | undefined> {
-    if (source === 'google') {
-      // TODO: Implement fetching full details from Google Places API using the 'id' (which is google_place_id)
-      // This might involve another Edge Function to proxy the call or direct client-side SDK usage.
-      // For now, return undefined or a partially filled station if `nearby-stations` provided enough.
-      console.warn(`getStationById for source 'google' (place_id: ${id}) needs full Google Places Details call - not yet implemented here.`);
-      // You could try to find it in a cached list from a previous getStations call if available for basic info.
-      return of(undefined); 
-    }
+  // getStationById is primarily for fetching details of DB-sourced stations using internal ID.
+  // For Google-sourced stations, the flow is: getStations -> (user interaction) -> NgRx triggers getGooglePlaceDetails.
+  getStationById(id: string): Observable<Station | undefined> {
+    // This method now primarily serves to get full details for stations ALREADY IN DB.
+    // If you need details for a Google-sourced station not yet in DB or not fully detailed,
+    // use the getGooglePlaceDetails method (via NgRx flow).
+    console.log(`getStationById called for ID: ${id}. This should be an internal DB ID.`);
 
-    // Assuming 'id' is an internal DB ID for source 'db' or if source is undefined
-    // This part reuses the old RPC logic, ensure 'get_station_fuel_details' is still relevant for internal IDs.
     return from(this.supabaseService.supabase.rpc('get_station_fuel_details', { target_station_id: id }))
       .pipe(
         map((response: any) => {
@@ -257,7 +127,11 @@ export class StationService {
             longitude: stationData.longitude,
             distance: null,
             reliabilityScore: null,
-            operatingHours: { open: '00:00', close: '00:00', is24Hours: true },
+            operatingHours: stationData.operating_hours ? {
+              open: stationData.operating_hours.open_time || 'N/A',
+              close: stationData.operating_hours.close_time || 'N/A',
+              is24Hours: stationData.operating_hours.is_24_hours || false,
+            } : null,
             fuelStatus: {
               petrol: (stationData.petrol_price !== null || stationData.petrol_available !== null || stationData.petrol_reported_at !== null) ? {
                 price: stationData.petrol_price,
@@ -284,15 +158,89 @@ export class StationService {
                 lastUpdated: stationData.gas_reported_at
               } : undefined,
             },
-            contact: { phone: null, website: null },
-            lastReported: stationData.petrol_reported_at || stationData.diesel_reported_at || stationData.kerosene_reported_at || stationData.gas_reported_at || new Date(0).toISOString(),
-            reportCount: null,
-            source: 'db' // Mark as db source
+            contact: { 
+              phone: stationData.phone_number || null, 
+              website: stationData.website_url || null 
+            },
+            lastReported: stationData.petrol_reported_at || stationData.diesel_reported_at || stationData.kerosene_reported_at || stationData.gas_reported_at || null,
+            reportCount: stationData.report_count || null,
+            source: 'db', // Mark as db source
+            google_place_id: stationData.google_place_id || null,
+            logoUrl: stationData.logo_url || null, // Assuming DB might store this from brand_info
+            website: stationData.website_url || stationData.brand_website || null, // Prioritize station specific, then brand
+            types: stationData.types || [], // Assuming DB might store this
+            rawFuelPrices: stationData.raw_fuel_prices || null, // Assuming DB might store this from brand_info
           } as Station;
         }),
         catchError(error => {
           console.error(`Supabase RPC error in getStationById for DB id ${id}:`, error.message);
           return throwError(() => new Error(`Failed to fetch DB station ${id}: ${error.message}`));
+        })
+      );
+  }
+
+  /**
+   * Fetches detailed information for a station from Google Places API via an Edge Function.
+   * @param placeId The Google Place ID of the station.
+   * @returns Observable<Partial<Station>> containing details to merge.
+   */
+  getGooglePlaceDetails(placeId: string): Observable<Partial<Station>> {
+    return from(
+      this.supabaseService.supabase.functions.invoke('get-google-place-details', {
+        body: { place_id: placeId }, // Match Edge Function expected payload
+      })
+    ).pipe(
+      map((response: any) => {
+        if (response.error) {
+          console.error(`Error calling get-google-place-details for placeId ${placeId}:`, response.error);
+          throw new Error(response.error.message || 'Failed to invoke get-google-place-details');
+        }
+        const place = response.data; // The Edge Function should return the Google Place object
+        if (!place) {
+          throw new Error('No data returned from get-google-place-details');
+        }
+
+        // Map Google Place data to Partial<Station>
+        const stationDetails: Partial<Station> = {
+          name: place.displayName?.text || place.name, // Fallback for different API versions if any
+          address: place.formattedAddress,
+          latitude: place.location?.latitude,
+          longitude: place.location?.longitude,
+          google_place_id: place.id,
+          contact: {
+            phone: place.internationalPhoneNumber || place.nationalPhoneNumber || null,
+            website: place.websiteUri || null,
+          },
+          operatingHours: place.regularOpeningHours ? {
+            // Need to parse periods to HH:MM, is24Hours correctly.
+            // This is a simplified example. Google API returns complex period structures.
+            open: place.regularOpeningHours.weekdayText?.join(', ') || 'N/A', // Placeholder, needs proper parsing
+            close: 'N/A', // Placeholder
+            is24Hours: place.regularOpeningHours.openNow !== undefined ? false : true, // Heuristic, improve this
+          } : null,
+          types: place.types || [],
+          // reliabilityScore, fuelStatus, brand, logoUrl might not be directly from here
+          // but brand could be inferred or set if primaryType matches GasStationBrand
+          // For now, these are not set here, allowing existing values (like from nearby-stations) to persist
+          detailsFetched: true, // Mark that details have been fetched
+          source: 'google', // Clarify source, though it should be already google
+        };
+        // Remove undefined fields to avoid overwriting existing valid data with undefined
+        Object.keys(stationDetails).forEach(key => 
+          (stationDetails as any)[key] === undefined && delete (stationDetails as any)[key]
+        );
+        if (stationDetails.contact && Object.keys(stationDetails.contact).length === 0) {
+          delete stationDetails.contact;
+        }
+        if (stationDetails.operatingHours && Object.keys(stationDetails.operatingHours).length === 0) {
+          delete stationDetails.operatingHours;
+        }
+
+        return stationDetails;
+      }),
+      catchError(error => {
+        console.error(`Error in getGooglePlaceDetails for placeId ${placeId}:`, error);
+        return throwError(() => new Error(`Failed to fetch Google Place details for ${placeId}`));
         })
       );
   }

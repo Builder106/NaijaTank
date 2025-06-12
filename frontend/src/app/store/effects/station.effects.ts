@@ -1,8 +1,8 @@
 import { Injectable } from '@angular/core';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
-import { Store, select } from '@ngrx/store';
+import { Store, createAction, props } from '@ngrx/store';
 import { EMPTY, of } from 'rxjs';
-import { map, exhaustMap, catchError, switchMap, withLatestFrom } from 'rxjs/operators';
+import { map, exhaustMap, catchError, switchMap, withLatestFrom, tap, filter } from 'rxjs/operators';
 import { StationService } from '../../core/services/station.service';
 import * as StationActions from '../actions/station.actions';
 import { AppState } from '../index'; // Assuming your root AppState is here
@@ -32,27 +32,117 @@ export class StationEffects {
     })
   ));
 
-  // Effect to handle selecting a station and fetching its details
-  // This is triggered when a station is selected, perhaps from a list or map marker click
-  loadSelectedStationDetails$ = createEffect(() => this.actions$.pipe(
-    ofType(StationActions.selectStation),
-    switchMap(action => {
-      // For source: 'google', getStationById will currently return undefined quickly.
-      // Actual fetching of Google details will need a separate mechanism or enhancement of getStationById.
-      // For source: 'db', it uses the existing RPC.
-      // We need to pass the 'source' if known, or getStationById might need to determine it.
-      // For now, assuming ID is for a DB station if source isn't explicitly google.
-      // This part will need more robust handling based on UI flow.
-      return this.stationService.getStationById(action.stationId /*, source */).pipe( 
+  // Effect for explicit full detail load of a station (e.g., DB station or refresh)
+  loadStationDetails$ = createEffect(() => this.actions$.pipe(
+    ofType(StationActions.loadStationDetails),
+    switchMap(action => 
+      // This service method might need to be more intelligent or a different one called
+      // depending on whether it's a DB station or an already-linked Google one.
+      // For now, assume getStationById handles fetching full details for known IDs.
+      this.stationService.getStationById(action.stationId).pipe( 
         map(station => StationActions.loadStationDetailsSuccess({ station })),
         catchError(error => of(StationActions.loadStationDetailsFailure({ error: error.message || 'Failed to load station details' })))
+      )
+    )
+  ));
+
+  // Effect to trigger the loading of Google Place Details
+  triggerGooglePlaceDetailsFetch$ = createEffect(() => this.actions$.pipe(
+    ofType(StationActions.triggerGooglePlaceDetailsFetch),
+    map(action => StationActions.loadGooglePlaceDetails({ 
+      stationIdToUpdate: action.stationId, // This is the ID in the store (might be google_place_id initially)
+      placeId: action.placeId 
+    }))
+  ));
+
+  // Effect to actually load Google Place Details from the service
+  loadGooglePlaceDetails$ = createEffect(() => this.actions$.pipe(
+    ofType(StationActions.loadGooglePlaceDetails),
+    switchMap(action => 
+      this.stationService.getGooglePlaceDetails(action.placeId).pipe(
+        map(details => StationActions.loadGooglePlaceDetailsSuccess({ 
+          stationIdToUpdate: action.stationIdToUpdate,
+          details // Expecting service to return Partial<Station>
+        })),
+        catchError(error => of(StationActions.loadGooglePlaceDetailsFailure({ 
+          stationIdToUpdate: action.stationIdToUpdate,
+          error: error.message || 'Failed to load Google Place details' 
+        })))
+      )
+    )
+  ));
+
+  // Effect to ensure station reference for Google-sourced stations
+  ensureStationReference$ = createEffect(() => this.actions$.pipe(
+    ofType(StationActions.ensureStationReference),
+    switchMap(action => {
+      if (!action.station.google_place_id) {
+        // Should not happen if this action is dispatched correctly
+        return of(StationActions.ensureStationReferenceFailure({ 
+          originalStationId: action.station.id, 
+          error: 'Missing google_place_id for ensureStationReference',
+          onFailureDispatchAction: action.onFailureDispatchAction // Pass through
+        }));
+      }
+      return this.stationService.ensureStationReference(action.station.google_place_id).pipe(
+        map(response => StationActions.ensureStationReferenceSuccess({
+          originalStationId: action.station.id,
+          newStationId: response.station_id,
+          updatedFields: { 
+            id: response.station_id,
+            google_place_id: action.station.google_place_id,
+            source: 'db',
+            detailsFetched: true,
+            isLinking: false
+          },
+          onSuccessDispatchAction: action.onSuccessDispatchAction // Pass through
+        })),
+        catchError(error => of(StationActions.ensureStationReferenceFailure({ 
+          originalStationId: action.station.id,
+          error: error.message || 'Failed to ensure station reference',
+          onFailureDispatchAction: action.onFailureDispatchAction // Pass through
+        })))
       );
     })
   ));
 
-  // You might also want an effect for reportFuelStatus if it has side effects other than just API call,
-  // or if you want to dispatch additional actions upon success/failure (e.g., show a toast).
-  // For now, assuming submitFuelReport in service is self-contained enough for direct calls from components/facades.
+  // Effect to handle dispatching onSuccessDispatchAction after successful station linking
+  handlePostStationLinkSuccessActions$ = createEffect(() => this.actions$.pipe(
+    ofType(StationActions.ensureStationReferenceSuccess),
+    map(action => {
+      if (action.onSuccessDispatchAction) {
+        let payload: Record<string, any> = action.onSuccessDispatchAction.payload;
+        // If payload needs the newStationId, replace a placeholder
+        if (payload && typeof payload === 'object' && payload['stationId'] === 'USE_NEW_STATION_ID') {
+          payload = { ...payload, stationId: action.newStationId };
+        }
+        return createAction(action.onSuccessDispatchAction.type, props<Record<string, any>>())(payload);
+      }
+      return null;
+    }),
+    filter(action => action !== null)
+  ));
+
+  // Effect to handle dispatching onFailureDispatchAction after failed station linking
+  handlePostStationLinkFailureActions$ = createEffect(() => this.actions$.pipe(
+    ofType(StationActions.ensureStationReferenceFailure),
+    map(action => {
+      if (action.onFailureDispatchAction) {
+        return createAction(action.onFailureDispatchAction.type, props<Record<string, any>>())(action.onFailureDispatchAction.payload);
+      }
+      return null;
+    }),
+    filter(action => action !== null)
+  ));
+
+//   reportFuelStatus effect (if needed for things like toast notifications)
+//   Example:
+//   reportFuelSuccess$ = createEffect(() => this.actions$.pipe(
+//     ofType(StationActions.reportFuelStatusSuccess),
+//     tap(() => {
+//       // this.toastService.show('Report submitted successfully!');
+//     })
+//   ), { dispatch: false });
 
   constructor(
     private actions$: Actions,

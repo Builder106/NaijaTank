@@ -1,3 +1,6 @@
+import { GasStationBrand } from '@shared/enums';
+import { FuelPrices } from '@shared/types';
+
 export interface FuelStatus {
   available: boolean;
   price: number | null;
@@ -8,8 +11,8 @@ export interface FuelStatus {
 export interface Station {
   id: string; // For DB stations, this is the internal ID. For Google-sourced, this might initially be the google_place_id before linking.
   name: string;
-  brand: string | null; // Made nullable as Google results might not always have a brand aligned with NaijaTank's concept
-  address: string | null; // Made nullable
+  brand: GasStationBrand | null; // Changed from string to GasStationBrand enum
+  address: string | null;
   latitude: number;
   longitude: number;
   distance: number | null; // in kilometers from user
@@ -18,24 +21,27 @@ export interface Station {
     open: string; // HH:MM format
     close: string; // HH:MM format
     is24Hours: boolean;
-  } | null; // Made nullable
+  } | null;
   fuelStatus: {
     petrol?: FuelStatus;
     diesel?: FuelStatus;
     kerosene?: FuelStatus;
     gas?: FuelStatus;
-  } | null; // Made nullable
+  } | null;
   contact: {
     phone: string | null;
-    website: string | null;
-  } | null; // Made nullable
-  lastReported: string | null; // Made nullable
+    website: string | null; // Will also be populated from brandLookupTable if available
+  } | null;
+  lastReported: string | null;
   reportCount: number | null;
 
-  // New fields for hybrid data
+  // New fields for hybrid data & Google Places integration
   source?: 'db' | 'google';
   google_place_id?: string; // To store Google's unique Place ID
-  // Consider if 'id' should always be your internal UUID after ensureStationReference, 
-  // and google_place_id is just for the link. 
-  // For now, `id` might be google_place_id for `source: 'google'` before it's linked.
+  logoUrl?: string | null; // For brand logo, e.g., from Brandfetch via brand-details
+  website?: string | null; // Station specific website from Google, or brand website as fallback
+  rawFuelPrices?: FuelPrices | null; // To store fuel prices as returned by nearby-stations (typically default brand prices)
+  types?: string[]; // Google Place types
+  detailsFetched?: boolean; // Flag to indicate if full Google Place Details have been fetched
+  isLinking?: boolean; // Flag to indicate if ensureStationReference is in progress for this station
 }

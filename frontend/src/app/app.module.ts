@@ -1,5 +1,5 @@
 import { NgModule } from '@angular/core';
-import { BrowserModule } from '@angular/platform-browser';
+import { BrowserModule, provideClientHydration } from '@angular/platform-browser';
 import { HttpClientModule } from '@angular/common/http';
 import { ReactiveFormsModule } from '@angular/forms';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
@@ -48,6 +48,7 @@ import { environment } from '../environments/environment';
     }),
   ],
   providers: [
+    provideClientHydration(),
     SupabaseService,
     AuthService,
     AuthGuard

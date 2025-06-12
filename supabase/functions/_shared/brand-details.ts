@@ -13,11 +13,6 @@ export interface EnrichedBrandDetails extends BrandDetails {
 }
 
 export const brandLookupTable: Readonly<Record<GasStationBrand, BrandDetails>> = {
-  [GasStationBrand.Exxon]: {
-    website: "https://www.exxon.com",
-    brandDomainForLogo: "exxon.com",
-    defaultFuelPrices: null,
-  },
   [GasStationBrand.Mobil]: {
     website: "https://mobil.com",
     brandDomainForLogo: "mobil.com",
