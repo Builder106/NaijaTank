@@ -1,0 +1,1 @@
+ALTER FUNCTION public.handle_fuel_report_update() SET search_path = '';
