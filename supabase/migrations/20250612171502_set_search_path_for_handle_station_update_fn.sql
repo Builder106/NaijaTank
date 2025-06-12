@@ -1,0 +1,1 @@
+ALTER FUNCTION public.handle_station_update() SET search_path = '';
