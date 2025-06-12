@@ -1,0 +1,1 @@
+ALTER FUNCTION public.handle_profile_update() SET search_path = '';
