@@ -1,0 +1,1 @@
+ALTER FUNCTION public.handle_new_user_profile_creation() SET search_path = '';
