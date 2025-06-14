@@ -5,11 +5,17 @@ import { Store } from '@ngrx/store';
 import { Observable } from 'rxjs';
 import { AppState } from '../../store';
 import { Station } from '../../core/models/station.model';
+import * as StationActions from '../../store/actions/station.actions';
+import { StationCardComponent } from '../../shared/components/station-card/station-card.component';
 
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [
+    CommonModule, 
+    RouterModule,
+    StationCardComponent
+  ],
   template: `
     <!-- Hero Section -->
     <section class="relative bg-primary-900 overflow-hidden min-h-screen">
@@ -64,26 +70,12 @@ import { Station } from '../../core/models/station.model';
             </a>
           </div>
 
-          <div class="space-y-4">
-            <div *ngFor="let station of stations$ | async" 
-                 class="bg-primary-800/50 backdrop-blur rounded-xl p-4 border border-primary-700">
-              <div class="flex items-center gap-4">
-                <div class="w-12 h-12 rounded-full bg-primary-700 flex items-center justify-center text-white">
-                  {{station.brand?.charAt(0)}}
-                </div>
-                <div class="flex-1">
-                  <h3 class="text-white font-medium">{{station.name}}</h3>
-                  <p class="text-sm text-white/60">
-                    <span *ngIf="station.fuelStatus?.petrol?.available">Petrol</span>
-                    <span *ngIf="station.fuelStatus?.petrol?.available && station.fuelStatus?.diesel?.available"> • </span>
-                    <span *ngIf="station.fuelStatus?.diesel?.available">Diesel</span>
-                    <!-- Consider adding Kerosene and Gas if desired for this summary -->
-                    <span *ngIf="(station.fuelStatus?.petrol?.available || station.fuelStatus?.diesel?.available) && station.distance !== null"> • </span>
-                    <span *ngIf="station.distance !== null">{{station.distance}} km away</span>
-                  </p>
-                </div>
-              </div>
-            </div>
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <app-station-card 
+              *ngFor="let station of stations$ | async" 
+              [station]="station"
+              (stationSelected)="onStationSelected($event)">
+            </app-station-card>
           </div>
         </div>
       </div>
@@ -117,5 +109,10 @@ export class HomeComponent implements OnInit {
 
   ngOnInit(): void {
     // Home component initializes with existing data
+  }
+
+  onStationSelected(station: Station): void {
+    this.store.dispatch(StationActions.selectStation({ stationId: station.id }));
+    this.router.navigate(['/stations', station.id]);
   }
 }
