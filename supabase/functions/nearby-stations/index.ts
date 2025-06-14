@@ -1,6 +1,6 @@
 // TODO: Use latest JSR packages
 import { createClient } from "jsr:@supabase/supabase-js";
-import { GoogleGenAI, Schema } from 'https://esm.sh/@google/genai';
+import { GoogleGenAI, Schema } from 'https://esm.sh/@google/genai@1.4.0';
 import { GasStationBrand, FuelPrices } from "../_shared/types.ts";
 import { getBrandDetails, EnrichedBrandDetails } from "../_shared/brand-details.ts";
 import { corsHeaders } from "../_shared/cors.ts"; // Import shared CORS headers
@@ -187,7 +187,7 @@ async function determineBrandsForMultipleStations(
 Deno.serve(async (req: Request) => {
   // Handle OPTIONS preflight request
   if (req.method === "OPTIONS") {
-    return new Response("ok", { headers: corsHeaders, status: 204 });
+    return new Response("ok", { headers: corsHeaders });
   }
 
   try {
