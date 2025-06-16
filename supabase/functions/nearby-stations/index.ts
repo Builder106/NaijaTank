@@ -1,6 +1,6 @@
 // TODO: Use latest JSR packages
 import { createClient } from "jsr:@supabase/supabase-js";
-import { GoogleGenAI, Schema } from 'https://esm.sh/@google/genai@1.4.0';
+import { GoogleGenAI, Schema } from 'https://esm.sh/@google/genai';
 import { GasStationBrand, FuelPrices } from "../_shared/types.ts";
 import { getBrandDetails, EnrichedBrandDetails } from "../_shared/brand-details.ts";
 import { corsHeaders } from "../_shared/cors.ts"; // Import shared CORS headers
