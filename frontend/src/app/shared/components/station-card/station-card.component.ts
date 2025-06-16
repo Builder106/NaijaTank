@@ -339,6 +339,9 @@ export class StationCardComponent implements OnInit, OnDestroy {
   @Output() quickReportSubmitted = new EventEmitter<any>();
   @Output() favoriteToggled = new EventEmitter<Station>();
 
+  // Expose Math to template
+  Math = Math;
+
   isLoadingDetails$!: Observable<boolean>;
   isLinking$!: Observable<boolean>;
   
@@ -498,131 +501,4 @@ export class StationCardComponent implements OnInit, OnDestroy {
     return !this.isCompactMode && this.fuelTypesArray.length > 2;
   }
 
-  getHiddenFuelCount(): number {
-    return this.fuelTypesArray.length - 2;
-  }
-
-  calculateTravelTime(): void {
-    if (this.station.distance) {
-      // Rough estimate: 30 km/h average speed in city
-      this.estimatedTravelTime = Math.round((this.station.distance / 30) * 60);
-    }
-  }
-
-  getReliabilityRingColor(score: number): string {
-    if (score >= 4) return 'border-success-500'; // Green
-    if (score >= 3) return 'border-warning-500'; // Yellow
-    return 'border-error-500'; // Red
-  }
-
-  getCompactFuelStatusColor(fuelType: 'petrol' | 'diesel' | 'kerosene' | 'gas'): string {
-    const info = this.getFuelDisplayInfo(fuelType);
-    if (info.type === 'reported') {
-      return info.available ? 'bg-success-500' : 'bg-error-500';
-    } else if (info.type === 'estimated') {
-      return 'bg-warning-500';
-    }
-    return 'bg-neutral-300 dark:bg-neutral-600';
-  }
-
-  getFuelDisplayInfo(fuelType: 'petrol' | 'diesel' | 'kerosene' | 'gas'): FuelDisplayInfo {
-    // Check if we have reported fuel status
-    const reportedStatus = this.station.fuelStatus?.[fuelType];
-    if (reportedStatus !== undefined) {
-      if (reportedStatus.available) {
-        return {
-          type: 'reported',
-          available: true,
-          price: reportedStatus.price,
-          queueLength: reportedStatus.queueLength,
-          displayText: reportedStatus.price ? `₦${reportedStatus.price}` : 'Available',
-          statusClass: 'text-success-600 dark:text-success-400'
-        };
-      } else {
-        return {
-          type: 'reported',
-          available: false,
-          displayText: 'Unavailable',
-          statusClass: 'text-error-600 dark:text-error-400'
-        };
-      }
-    }
-
-    // Check if we have estimated prices
-    const estimatedPrice = this.station.rawFuelPrices?.[fuelType];
-    if (estimatedPrice !== undefined && estimatedPrice !== null) {
-      return {
-        type: 'estimated',
-        price: estimatedPrice,
-        displayText: `₦${estimatedPrice}`,
-        statusClass: 'text-neutral-600 dark:text-neutral-400'
-      };
-    }
-
-    // No data available
-    return {
-      type: 'none',
-      displayText: 'N/A',
-      statusClass: 'text-neutral-400 dark:text-neutral-500'
-    };
-  }
-
-  getFuelIconPath(fuelType: string): string {
-    const icons = {
-      // Gas Pump icon (fa-gas-pump style)
-      petrol: 'M2 2a2 2 0 012-2h8a2 2 0 012 2v12a2 2 0 01-2 2H4a2 2 0 01-2-2V2zm2 0v12h8V2H4zm10 2h1a1 1 0 011 1v2a1 1 0 01-1 1h-1V4zm0 6h1a1 1 0 011 1v2a1 1 0 01-1 1h-1v-4zm-8-4a1 1 0 011-1h4a1 1 0 011 1v2a1 1 0 01-1 1H7a1 1 0 01-1-1V6z',
-      // Oil Can icon (fa-oil-can style)  
-      diesel: 'M2 10a2 2 0 012-2h8a2 2 0 012 2v2a2 2 0 01-2 2H4a2 2 0 01-2-2v-2zm2-6a1 1 0 011-1h6a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V4zm12 4a1 1 0 011 1v2a1 1 0 01-1 1h-2V8h2zM6 10h4v2H6v-2z',
-      // Lamp icon (fa-lamp style)
-      kerosene: 'M8 2a1 1 0 011 1v1h2a1 1 0 110 2H9v1a3 3 0 003 3h1a1 1 0 110 2h-1a5 5 0 01-5-5V6H5a1 1 0 110-2h2V3a1 1 0 011-1zm2 8a1 1 0 100 2 1 1 0 000-2z',
-      // Flame icon (fa-burn/fa-flame style)
-      gas: 'M10 2C8.5 2 7.5 3.5 7.5 5c0 1 .5 2 1 2.5.5.5 1 1 1 2 0 .5-.5 1-1 1.5-.5.5-1 1-1 2 0 1.5 1 2.5 2.5 2.5s2.5-1 2.5-2.5c0-1-.5-1.5-1-2-.5-.5-1-1-1-2 0-.5.5-1 1-1.5.5-.5 1-1.5 1-2.5 0-1.5-1-3-2.5-3z'
-    };
-    return icons[fuelType as keyof typeof icons] || icons.petrol;
-  }
-
-  getFuelIconColor(fuelType: string): string {
-    const colors = {
-      petrol: 'bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-400',
-      diesel: 'bg-orange-100 dark:bg-orange-900 text-orange-600 dark:text-orange-400', 
-      kerosene: 'bg-purple-100 dark:bg-purple-900 text-purple-600 dark:text-purple-400',
-      gas: 'bg-green-100 dark:bg-green-900 text-green-600 dark:text-green-400'
-    };
-    return colors[fuelType as keyof typeof colors] || colors.petrol;
-  }
-
-  getFuelTypeName(fuelType: string): string {
-    const names = {
-      petrol: 'Petrol',
-      diesel: 'Diesel',
-      kerosene: 'Kerosene',
-      gas: 'Gas'
-    };
-    return names[fuelType as keyof typeof names] || fuelType;
-  }
-
-  getTimeAgo(dateString: string | null): string {
-    if (!dateString) return 'N/A';
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffMs = now.getTime() - date.getTime();
-    const diffMins = Math.floor(diffMs / 60000);
-    
-    if (diffMins < 1) return 'just now';
-    if (diffMins < 60) return `${diffMins}m ago`;
-    const hours = Math.floor(diffMins / 60);
-    if (hours < 24) return `${hours}h ago`;
-    const days = Math.floor(hours / 24);
-    return `${days}d ago`;
-  }
-
-  getBrandName(brand: GasStationBrand | null): string {
-    if (!brand) return '';
-    return GasStationBrand[brand as keyof typeof GasStationBrand] || brand.toString(); 
-  }
-
-  getBrandInitial(brand: GasStationBrand | null): string {
-    const name = this.getBrandName(brand);
-    return name ? name.charAt(0).toUpperCase() : '?';
-  }
-}
+  getHiddenFuel
