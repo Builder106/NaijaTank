@@ -1,8 +1,155 @@
-Here's the complete file content with all missing parts filled in:
+import { Component, Input, Output, EventEmitter, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { RouterModule } from '@angular/router';
 
-[Previous content remains exactly the same until the getCompactFuelStatusColor method]
+interface Station {
+  id: string;
+  name: string;
+  brand?: string;
+  address: string;
+  distance?: number;
+  lastReported?: string;
+  fuelStatus?: {
+    petrol?: FuelStatus;
+    diesel?: FuelStatus;
+    kerosene?: FuelStatus;
+    gas?: FuelStatus;
+  };
+  rawFuelPrices?: {
+    petrol?: number;
+    diesel?: number;
+    kerosene?: number;
+    gas?: number;
+  };
+  reliabilityScore?: number;
+  isFavorite?: boolean;
+}
 
-```typescript
+interface FuelStatus {
+  available: boolean;
+  price?: number;
+  queueLength?: number;
+}
+
+interface FuelDisplayInfo {
+  type: 'reported' | 'estimated' | 'none';
+  available?: boolean;
+  price?: number;
+  queueLength?: number;
+  displayText: string;
+  statusClass: string;
+}
+
+@Component({
+  selector: 'app-station-card',
+  standalone: true,
+  imports: [CommonModule, RouterModule],
+  template: `
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 hover:shadow-lg transition-shadow duration-200">
+      <!-- Station Header -->
+      <div class="flex items-start justify-between mb-3">
+        <div class="flex-1">
+          <h3 class="text-lg font-semibold text-gray-900 dark:text-white">{{ station.name }}</h3>
+          <p class="text-sm text-gray-600 dark:text-gray-400">{{ station.address }}</p>
+          <div class="flex items-center mt-1 space-x-2">
+            <span *ngIf="station.distance" class="text-xs text-gray-500 dark:text-gray-400">
+              {{ station.distance.toFixed(1) }}km away
+            </span>
+            <span *ngIf="estimatedTravelTime" class="text-xs text-gray-500 dark:text-gray-400">
+              • {{ estimatedTravelTime }}min
+            </span>
+          </div>
+        </div>
+        
+        <!-- Favorite Button -->
+        <button 
+          (click)="onToggleFavorite()"
+          class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+          <svg class="w-5 h-5" [class]="station.isFavorite ? 'text-red-500' : 'text-gray-400'" fill="currentColor" viewBox="0 0 20 20">
+            <path d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z"/>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Fuel Status Grid -->
+      <div class="grid grid-cols-2 gap-2 mb-3">
+        <div *ngFor="let fuelType of ['petrol', 'diesel', 'kerosene', 'gas']" 
+             class="flex items-center space-x-2 p-2 rounded-md bg-gray-50 dark:bg-gray-700">
+          <div [class]="getFuelIconColor(fuelType)" class="w-8 h-8 rounded-full flex items-center justify-center">
+            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+              <path [attr.d]="getFuelIconPath(fuelType)"/>
+            </svg>
+          </div>
+          <div class="flex-1 min-w-0">
+            <p class="text-xs font-medium text-gray-900 dark:text-white">{{ getFuelTypeName(fuelType) }}</p>
+            <p class="text-xs" [class]="getFuelDisplayInfo(fuelType).statusClass">
+              {{ getFuelDisplayInfo(fuelType).displayText }}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Compact Fuel Status Indicators -->
+      <div class="flex space-x-1 mb-3">
+        <div *ngFor="let fuelType of ['petrol', 'diesel', 'kerosene', 'gas']"
+             [class]="getCompactFuelStatusColor(fuelType)"
+             class="flex-1 h-2 rounded-full">
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <div class="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
+        <div class="flex items-center space-x-2">
+          <div *ngIf="station.reliabilityScore" class="flex items-center">
+            <div class="w-4 h-4 rounded-full border-2" [class]="getReliabilityRingColor(station.reliabilityScore)">
+              <div class="w-full h-full rounded-full bg-current opacity-20"></div>
+            </div>
+            <span class="ml-1">{{ station.reliabilityScore.toFixed(1) }}</span>
+          </div>
+        </div>
+        <span>Updated {{ getTimeAgo(station.lastReported) }}</span>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="flex space-x-2 mt-3">
+        <button 
+          (click)="onViewDetails()"
+          class="flex-1 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium py-2 px-4 rounded-md transition-colors">
+          View Details
+        </button>
+        <button 
+          (click)="onReportFuel()"
+          class="flex-1 bg-gray-600 hover:bg-gray-700 text-white text-sm font-medium py-2 px-4 rounded-md transition-colors">
+          Report Fuel
+        </button>
+      </div>
+    </div>
+  `
+})
+export class StationCardComponent implements OnInit {
+  @Input() station!: Station;
+  @Output() toggleFavorite = new EventEmitter<string>();
+  @Output() viewDetails = new EventEmitter<string>();
+  @Output() reportFuel = new EventEmitter<string>();
+
+  estimatedTravelTime?: number;
+
+  ngOnInit(): void {
+    this.calculateTravelTime();
+  }
+
+  onToggleFavorite(): void {
+    this.toggleFavorite.emit(this.station.id);
+  }
+
+  onViewDetails(): void {
+    this.viewDetails.emit(this.station.id);
+  }
+
+  onReportFuel(): void {
+    this.reportFuel.emit(this.station.id);
+  }
+
   getCompactFuelStatusColor(fuelType: 'petrol' | 'diesel' | 'kerosene' | 'gas'): string {
     const info = this.getFuelDisplayInfo(fuelType);
     if (info.type === 'none') return 'bg-neutral-300 dark:bg-neutral-600';
@@ -20,7 +167,7 @@ Here's the complete file content with all missing parts filled in:
         price: status.price,
         queueLength: status.queueLength,
         displayText: status.available ? 
-          (status.price ? \`₦${status.price}` : 'Available') : 
+          (status.price ? `₦${status.price}` : 'Available') : 
           'Unavailable',
         statusClass: status.available ? 
           'text-success-600 dark:text-success-400' : 
@@ -31,7 +178,7 @@ Here's the complete file content with all missing parts filled in:
         type: 'estimated',
         available: true,
         price: rawPrice,
-        displayText: \`₦${rawPrice}`,
+        displayText: `₦${rawPrice}`,
         statusClass: 'text-neutral-600 dark:text-neutral-400'
       };
     }
@@ -79,21 +226,22 @@ Here's the complete file content with all missing parts filled in:
     return 'border-error-500 dark:border-error-400';
   }
 
-  getTimeAgo(timestamp: number | null | undefined): string {
+  getTimeAgo(timestamp: string | null | undefined): string {
     if (!timestamp) return 'Never';
     
     const now = Date.now();
-    const diff = now - timestamp;
+    const time = new Date(timestamp).getTime();
+    const diff = now - time;
     const minutes = Math.floor(diff / 60000);
     
     if (minutes < 1) return 'Just now';
-    if (minutes < 60) return \`${minutes}m ago`;
+    if (minutes < 60) return `${minutes}m ago`;
     
     const hours = Math.floor(minutes / 60);
-    if (hours < 24) return \`${hours}h ago`;
+    if (hours < 24) return `${hours}h ago`;
     
     const days = Math.floor(hours / 24);
-    return \`${days}d ago`;
+    return `${days}d ago`;
   }
 
   private calculateTravelTime(): void {
@@ -103,4 +251,3 @@ Here's the complete file content with all missing parts filled in:
     }
   }
 }
-```
