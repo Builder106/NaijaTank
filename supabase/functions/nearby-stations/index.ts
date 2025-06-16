@@ -92,6 +92,19 @@ interface RequestPayload {
   radius_km: number;
   type?: string;
 }
+
+// Interface for brand_info table rows
+interface BrandInfoRow {
+  brand_key: string;
+  website: string | null;
+  petrol_price: number | null;
+  diesel_price: number | null;
+  kerosene_price: number | null;
+  gas_price: number | null;
+  prices_last_updated_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
 // --- END NEW TYPE DEFINITIONS ---
 
 // --- START HELPER FUNCTION FOR BATCH LLM with Structured Output ---
@@ -228,6 +241,30 @@ Deno.serve(async (req: Request) => {
       });
     }
 
+    // Fetch brand_info data once at the beginning
+    const brandInfoMap = new Map<string, FuelPrices>();
+    try {
+      const { data: brandInfoData, error: brandInfoError } = await supabase
+        .from('brand_info')
+        .select('brand_key, petrol_price, diesel_price, kerosene_price, gas_price');
+      
+      if (brandInfoError) {
+        console.error("Error fetching brand_info:", brandInfoError);
+      } else if (brandInfoData) {
+        (brandInfoData as BrandInfoRow[]).forEach((row: BrandInfoRow) => {
+          brandInfoMap.set(row.brand_key, {
+            petrol: row.petrol_price,
+            diesel: row.diesel_price,
+            kerosene: row.kerosene_price,
+            gas: row.gas_price,
+          });
+        });
+        console.log(`Loaded ${brandInfoMap.size} brand fuel price entries from database`);
+      }
+    } catch (e) {
+      console.error("Exception fetching brand_info:", e);
+    }
+
     const allStations: StationOutput[] = [];
     const processedGooglePlaceIds = new Set<string>(); // Stores google_place_id from DB stations
 
@@ -245,6 +282,10 @@ Deno.serve(async (req: Request) => {
         const formattedDbStations = (dbStationsData as DbStation[]).map((s: DbStation): StationOutput => {
           const brandEnum = GasStationBrand[s.brand as keyof typeof GasStationBrand] || GasStationBrand.Unknown;
           const brandInfo: EnrichedBrandDetails | undefined = getBrandDetails(brandEnum);
+          
+          // Get fuel prices from brand_info table
+          const fuelPrices = brandInfoMap.get(brandEnum) || null;
+          
           return {
             id: s.id,
             name: s.name,
@@ -255,7 +296,7 @@ Deno.serve(async (req: Request) => {
             google_place_id: s.google_place_id,
             brand: brandEnum,
             website: brandInfo?.website ?? null,
-            fuel_prices: brandInfo?.defaultFuelPrices ?? null,
+            fuel_prices: fuelPrices,
             logoUrl: brandInfo?.brandfetchLogoUrl ?? null,
           };
         });
@@ -338,6 +379,10 @@ Deno.serve(async (req: Request) => {
     for (const place of googlePlaceItemsToProcess) {
       const determinedBrand = brandResults[place.displayName.text] || GasStationBrand.Unknown;
       const brandInfo: EnrichedBrandDetails | undefined = getBrandDetails(determinedBrand);
+      
+      // Get fuel prices from brand_info table
+      const fuelPrices = brandInfoMap.get(determinedBrand) || null;
+      
       allStations.push({
         id: place.id,
         name: place.displayName.text,
@@ -348,7 +393,7 @@ Deno.serve(async (req: Request) => {
         source: 'google' as const,
         brand: determinedBrand,
         website: brandInfo?.website ?? null,
-        fuel_prices: brandInfo?.defaultFuelPrices ?? null,
+        fuel_prices: fuelPrices,
         logoUrl: brandInfo?.brandfetchLogoUrl ?? null,
       });
     }
