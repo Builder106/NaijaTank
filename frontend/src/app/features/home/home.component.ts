@@ -6,7 +6,7 @@ import { Observable } from 'rxjs';
 import { AppState } from '../../store';
 import { Station } from '../../core/models/station.model';
 import * as StationActions from '../../store/actions/station.actions';
-import { StationCardComponent } from '../../shared/components/station-card/station-card.component';
+import { EnhancedStationCardComponent } from '../../shared/components/enhanced-station-card/enhanced-station-card.component';
 
 @Component({
   selector: 'app-home',
@@ -14,7 +14,7 @@ import { StationCardComponent } from '../../shared/components/station-card/stati
   imports: [
     CommonModule, 
     RouterModule,
-    StationCardComponent
+    EnhancedStationCardComponent
   ],
   template: `
     <!-- Hero Section -->
@@ -71,11 +71,11 @@ import { StationCardComponent } from '../../shared/components/station-card/stati
           </div>
 
           <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            <app-station-card 
+            <app-enhanced-station-card 
               *ngFor="let station of stations$ | async" 
               [station]="station"
               (viewDetails)="onStationSelected($event)">
-            </app-station-card>
+            </app-enhanced-station-card>
           </div>
         </div>
       </div>

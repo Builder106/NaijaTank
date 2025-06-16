@@ -8,7 +8,7 @@ import { AppState } from '../../store';
 import { Station } from '../../core/models/station.model';
 import * as StationSelectors from '../../store/selectors/station.selectors';
 import * as StationActions from '../../store/actions/station.actions';
-import { StationCardComponent } from '../../shared/components/station-card/station-card.component';
+import { EnhancedStationCardComponent } from '../../shared/components/enhanced-station-card/enhanced-station-card.component';
 import { FilterBarComponent } from '../../shared/components/filter-bar/filter-bar.component';
 import { LoaderComponent } from '../../shared/components/loader/loader.component';
 
@@ -18,7 +18,7 @@ import { LoaderComponent } from '../../shared/components/loader/loader.component
   imports: [
     CommonModule,
     RouterModule,
-    StationCardComponent,
+    EnhancedStationCardComponent,
     FilterBarComponent,
     LoaderComponent
   ],
@@ -68,11 +68,11 @@ import { LoaderComponent } from '../../shared/components/loader/loader.component
         </div>
         
         <div *ngIf="!(loading$ | async) && !(error$ | async) && (stations$ | async) && (stations$ | async)!.length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          <app-station-card 
+          <app-enhanced-station-card 
             *ngFor="let station of stations$ | async" 
             [station]="station"
             (viewDetails)="onStationSelected($event)">
-          </app-station-card>
+          </app-enhanced-station-card>
         </div>
       </section>
     </div>

@@ -1,11 +1,53 @@
 import { GasStationBrand } from '@shared/enums';
 import { FuelPrices } from '@shared/types';
 
+export interface DataFreshness {
+  level: 'fresh' | 'recent' | 'stale';
+  lastUpdated: string;
+  minutesAgo: number;
+}
+
+export interface PriceTrend {
+  direction: 'up' | 'down' | 'stable';
+  change: number; // percentage change
+  sparklineData: number[]; // Last 7 days of prices
+}
+
+export interface PeakHours {
+  busyPeriods: Array<{
+    start: string; // HH:MM format
+    end: string;
+    intensity: 'low' | 'medium' | 'high';
+  }>;
+  currentStatus: 'quiet' | 'normal' | 'busy' | 'very_busy';
+}
+
+export interface CommunityData {
+  recentVisitors: number; // visitors in last 24h
+  verificationBadge: boolean;
+  lastVerified: string | null;
+  communityNotes: Array<{
+    id: string;
+    text: string;
+    upvotes: number;
+    createdAt: string;
+  }>;
+}
+
+export interface AvailabilityPrediction {
+  likelyToRunOut: boolean;
+  estimatedTime: string | null; // "3 PM" or null
+  confidence: number; // 0-100
+}
+
 export interface FuelStatus {
   available: boolean;
   price: number | null;
   queueLength: 'None' | 'Short' | 'Medium' | 'Long' | null;
   lastUpdated: string; // ISO date string
+  dataFreshness?: DataFreshness;
+  priceTrend?: PriceTrend;
+  availabilityPrediction?: AvailabilityPrediction;
 }
 
 export interface Station {
@@ -45,4 +87,15 @@ export interface Station {
   detailsFetched?: boolean; // Flag to indicate if full Google Place Details have been fetched
   isLinking?: boolean; // Flag to indicate if ensureStationReference is in progress for this station
   isFavorite?: boolean; // Flag to indicate if the station is marked as favorite by the user
+
+  // Enhanced features
+  peakHours?: PeakHours;
+  communityData?: CommunityData;
+  alternativeStations?: Array<{
+    id: string;
+    name: string;
+    distance: number;
+    estimatedSavings: number; // minutes or price
+  }>;
+  confidenceScore?: number; // 0-100 based on data reliability
 }
