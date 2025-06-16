@@ -196,10 +196,14 @@ export class StationCardComponent implements OnInit {
 
   getFuelIconPath(fuelType: string): string {
     const icons = {
-      petrol: 'M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z',
-      diesel: 'M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z',
-      kerosene: 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z',
-      gas: 'M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z'
+      // Gas Pump icon (fa-gas-pump style)
+      petrol: 'M2 2a2 2 0 012-2h8a2 2 0 012 2v12a2 2 0 01-2 2H4a2 2 0 01-2-2V2zm2 0v12h8V2H4zm10 2h1a1 1 0 011 1v2a1 1 0 01-1 1h-1V4zm0 6h1a1 1 0 011 1v2a1 1 0 01-1 1h-1v-4zm-8-4a1 1 0 011-1h4a1 1 0 011 1v2a1 1 0 01-1 1H7a1 1 0 01-1-1V6z',
+      // Oil Can icon (fa-oil-can style)  
+      diesel: 'M2 10a2 2 0 012-2h8a2 2 0 012 2v2a2 2 0 01-2 2H4a2 2 0 01-2-2v-2zm2-6a1 1 0 011-1h6a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V4zm12 4a1 1 0 011 1v2a1 1 0 01-1 1h-2V8h2zM6 10h4v2H6v-2z',
+      // Lamp icon (fa-lamp style)
+      kerosene: 'M8 2a1 1 0 011 1v1h2a1 1 0 110 2H9v1a3 3 0 003 3h1a1 1 0 110 2h-1a5 5 0 01-5-5V6H5a1 1 0 110-2h2V3a1 1 0 011-1zm2 8a1 1 0 100 2 1 1 0 000-2z',
+      // Flame icon (fa-burn/fa-flame style)
+      gas: 'M10 2C8.5 2 7.5 3.5 7.5 5c0 1 .5 2 1 2.5.5.5 1 1 1 2 0 .5-.5 1-1 1.5-.5.5-1 1-1 2 0 1.5 1 2.5 2.5 2.5s2.5-1 2.5-2.5c0-1-.5-1.5-1-2-.5-.5-1-1-1-2 0-.5.5-1 1-1.5.5-.5 1-1.5 1-2.5 0-1.5-1-3-2.5-3z'
     };
     return icons[fuelType as keyof typeof icons] || icons.petrol;
   }
