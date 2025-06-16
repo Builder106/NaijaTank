@@ -74,7 +74,7 @@ import { StationCardComponent } from '../../shared/components/station-card/stati
             <app-station-card 
               *ngFor="let station of stations$ | async" 
               [station]="station"
-              (stationSelected)="onStationSelected($event)">
+              (viewDetails)="onStationSelected($event)">
             </app-station-card>
           </div>
         </div>

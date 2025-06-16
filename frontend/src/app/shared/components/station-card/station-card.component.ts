@@ -1,35 +1,7 @@
 import { Component, Input, Output, EventEmitter, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
-
-interface Station {
-  id: string;
-  name: string;
-  brand?: string;
-  address: string;
-  distance?: number;
-  lastReported?: string;
-  fuelStatus?: {
-    petrol?: FuelStatus;
-    diesel?: FuelStatus;
-    kerosene?: FuelStatus;
-    gas?: FuelStatus;
-  };
-  rawFuelPrices?: {
-    petrol?: number;
-    diesel?: number;
-    kerosene?: number;
-    gas?: number;
-  };
-  reliabilityScore?: number;
-  isFavorite?: boolean;
-}
-
-interface FuelStatus {
-  available: boolean;
-  price?: number;
-  queueLength?: number;
-}
+import { Station, FuelStatus } from '../../../core/models/station.model';
 
 interface FuelDisplayInfo {
   type: 'reported' | 'estimated' | 'none';
@@ -129,7 +101,7 @@ interface FuelDisplayInfo {
 export class StationCardComponent implements OnInit {
   @Input() station!: Station;
   @Output() toggleFavorite = new EventEmitter<string>();
-  @Output() viewDetails = new EventEmitter<string>();
+  @Output() viewDetails = new EventEmitter<Station>();
   @Output() reportFuel = new EventEmitter<string>();
 
   estimatedTravelTime?: number;
@@ -143,7 +115,7 @@ export class StationCardComponent implements OnInit {
   }
 
   onViewDetails(): void {
-    this.viewDetails.emit(this.station.id);
+    this.viewDetails.emit(this.station);
   }
 
   onReportFuel(): void {
