@@ -45,7 +45,7 @@ interface FuelDisplayInfo {
 
       <!-- Fuel Status Grid -->
       <div class="grid grid-cols-2 gap-2 mb-3">
-        <div *ngFor="let fuelType of ['petrol', 'diesel', 'kerosene', 'gas']" 
+        <div *ngFor="let fuelType of fuelTypes"
              class="flex items-center space-x-2 p-2 rounded-md bg-gray-50 dark:bg-gray-700">
           <div [class]="getFuelIconColor(fuelType)" class="w-8 h-8 rounded-full flex items-center justify-center">
             <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
@@ -63,7 +63,7 @@ interface FuelDisplayInfo {
 
       <!-- Compact Fuel Status Indicators -->
       <div class="flex space-x-1 mb-3">
-        <div *ngFor="let fuelType of ['petrol', 'diesel', 'kerosene', 'gas']"
+        <div *ngFor="let fuelType of fuelTypes"
              [class]="getCompactFuelStatusColor(fuelType)"
              class="flex-1 h-2 rounded-full">
         </div>
@@ -105,6 +105,7 @@ export class StationCardComponent implements OnInit {
   @Output() reportFuel = new EventEmitter<string>();
 
   estimatedTravelTime?: number;
+  public fuelTypes: Array<'petrol' | 'diesel' | 'kerosene' | 'gas'> = ['petrol', 'diesel', 'kerosene', 'gas'];
 
   ngOnInit(): void {
     this.calculateTravelTime();
@@ -133,16 +134,27 @@ export class StationCardComponent implements OnInit {
     const rawPrice = this.station.rawFuelPrices?.[fuelType];
 
     if (status) {
+      let numericQueueLength: number | undefined = undefined;
+      if (status.queueLength !== null) {
+        switch (status.queueLength) {
+          case "None": numericQueueLength = 0; break;
+          case "Short": numericQueueLength = 1; break;
+          case "Medium": numericQueueLength = 2; break;
+          case "Long": numericQueueLength = 3; break;
+          // No default needed as status.queueLength is a known union ('None'|'Short'|'Medium'|'Long') or null
+        }
+      }
+
       return {
         type: 'reported',
         available: status.available,
-        price: status.price,
-        queueLength: status.queueLength,
-        displayText: status.available ? 
-          (status.price ? `₦${status.price}` : 'Available') : 
+        price: status.price ?? undefined,
+        queueLength: numericQueueLength,
+        displayText: status.available ?
+          (status.price ? `₦${status.price}` : 'Available') :
           'Unavailable',
-        statusClass: status.available ? 
-          'text-success-600 dark:text-success-400' : 
+        statusClass: status.available ?
+          'text-success-600 dark:text-success-400' :
           'text-error-600 dark:text-error-400'
       };
     } else if (rawPrice) {
