@@ -28,11 +28,20 @@ import { Observable } from 'rxjs';
           {{ getBrandInitial(station.brand) }}
         </div>
         <div class="flex-grow">
-        <div class="flex justify-between items-start">
-          <div>
-              <h3 class="font-extrabold text-xl leading-tight">{{station.name || 'Loading...'}}</h3>
-              <p class="text-sm text-primary-100">{{getBrandName(station.brand) || (station.source === 'google' ? 'Google Sourced' : 'Brand N/A')}}</p>
-              <p *ngIf="station.distance !== null && station.distance !== undefined" class="text-sm text-primary-200">{{station.distance.toFixed(1)}} km away</p>
+          <div class="flex justify-between items-start">
+            <div>
+              <h3 class="font-bold text-2xl leading-tight">{{station.name || 'Loading...'}}</h3>
+              <p class="text-base text-primary-50">{{getBrandName(station.brand) || (station.source === 'google' ? 'Google Sourced' : 'Brand N/A')}}</p>
+              <p *ngIf="station.distance !== null && station.distance !== undefined" class="text-sm text-primary-100">{{station.distance.toFixed(1)}} km away</p>
+              <!-- Reliability Score in Header -->
+              <div *ngIf="station.reliabilityScore !== null && station.reliabilityScore !== undefined" class="flex items-center gap-1 mt-1">
+                <svg class="w-4 h-4 text-yellow-300" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+                </svg>
+                <span class="text-sm font-medium text-primary-100">
+                  {{station.reliabilityScore.toFixed(1)}} Reliability ({{station.reportCount || 0}} reports)
+                </span>
+              </div>
             </div>
           </div>
         </div>
@@ -42,61 +51,109 @@ import { Observable } from 'rxjs';
       <div class="p-4 space-y-4">
         <!-- Address -->
         <div class="flex items-start gap-2 text-sm text-neutral-700">
-          <span class="mt-0.5 w-3.5 h-3.5 text-primary-600 flex-shrink-0">📍</span>
+          <svg class="mt-0.5 w-4 h-4 text-primary-600 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"/>
+          </svg>
           <p>{{station.address || (station.source === 'google' && !(isLoadingDetails$ | async) ? 'Address not yet loaded' : 'Address not available')}}</p>
         </div>
         
         <!-- Fuel Status (from station.fuelStatus or station.rawFuelPrices as fallback) -->
         <div *ngIf="station.fuelStatus || station.rawFuelPrices">
           <div class="text-sm font-semibold text-neutral-800 mb-2">Fuel Status</div>
-          <div class="space-y-1.5 text-xs">
-          <ng-container *ngIf="station.fuelStatus as fs">
-            <div *ngIf="fs.petrol !== undefined" class="flex items-center justify-between">
-              <span class="font-medium text-neutral-700">Petrol</span>
-              <div [ngClass]="{ 'badge-success': fs.petrol.available, 'badge-error': !fs.petrol.available, 'badge badge-sm': true }">
-                <span *ngIf="fs.petrol.available">₦{{fs.petrol.price}}<span *ngIf="fs.petrol.queueLength" class="ml-1 opacity-75"> ({{fs.petrol.queueLength}})</span></span>
-                <span *ngIf="!fs.petrol.available">Unavailable</span>
+          <div class="space-y-2 text-xs">
+            <ng-container *ngIf="station.fuelStatus as fs">
+              <div *ngIf="fs.petrol !== undefined" class="flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                  <svg class="w-4 h-4 text-neutral-600" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z"/>
+                  </svg>
+                  <span class="font-medium text-neutral-700">Petrol</span>
+                </div>
+                <div [ngClass]="{ 
+                  'px-2 py-0.5 rounded-full text-xs font-semibold bg-success-100 text-success-700': fs.petrol.available, 
+                  'px-2 py-0.5 rounded-full text-xs font-semibold bg-error-100 text-error-700': !fs.petrol.available 
+                }">
+                  <span *ngIf="fs.petrol.available">₦{{fs.petrol.price}}<span *ngIf="fs.petrol.queueLength" class="ml-1 opacity-75"> ({{fs.petrol.queueLength}})</span></span>
+                  <span *ngIf="!fs.petrol.available">Unavailable</span>
+                </div>
               </div>
-            </div>
-            <div *ngIf="fs.petrol === undefined && station.rawFuelPrices?.petrol !== undefined" class="flex items-center justify-between text-neutral-500">
-              <span class="font-medium text-neutral-700">Petrol (est.)</span>
-              <span>{{ station.rawFuelPrices?.petrol ? ('₦' + station.rawFuelPrices!.petrol) : 'N/A'}}</span>
-          </div>
-
-            <!-- Diesel -->
-            <div *ngIf="fs.diesel !== undefined" class="flex items-center justify-between">
-              <span class="font-medium text-neutral-700">Diesel</span>
-              <div [ngClass]="{ 'badge-success': fs.diesel.available, 'badge-error': !fs.diesel.available, 'badge badge-sm': true }">
-                <span *ngIf="fs.diesel.available">₦{{fs.diesel.price}}</span>
-                <span *ngIf="!fs.diesel.available">Unavailable</span>
+              <div *ngIf="fs.petrol === undefined && station.rawFuelPrices?.petrol !== undefined" class="flex items-center justify-between text-neutral-500">
+                <div class="flex items-center gap-2">
+                  <svg class="w-4 h-4 text-neutral-400" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z"/>
+                  </svg>
+                  <span class="font-medium text-neutral-700">Petrol (est.)</span>
+                </div>
+                <span>{{ station.rawFuelPrices?.petrol ? ('₦' + station.rawFuelPrices!.petrol) : 'N/A'}}</span>
               </div>
-            </div>
-            <div *ngIf="fs.diesel === undefined && station.rawFuelPrices?.diesel !== undefined" class="flex items-center justify-between text-neutral-500">
-              <span class="font-medium text-neutral-700">Diesel (est.)</span>
-              <span>{{ station.rawFuelPrices?.diesel ? ('₦' + station.rawFuelPrices!.diesel) : 'N/A'}}</span>
-          </div>
 
-          </ng-container>
-          <ng-container *ngIf="!station.fuelStatus && station.rawFuelPrices as rfp"> 
-            <!-- Fallback to rawFuelPrices if fuelStatus is completely null -->
-            <p class="text-neutral-500 text-xs mb-1">(Estimated prices based on brand)</p>
-            <div *ngIf="rfp.petrol !== undefined && rfp.petrol !== null" class="flex items-center justify-between text-neutral-500">
-              <span class="font-medium text-neutral-700">Petrol (est.)</span>
-              <span>₦{{rfp.petrol}}</span>
-            </div>
-            <div *ngIf="rfp.diesel !== undefined && rfp.diesel !== null" class="flex items-center justify-between text-neutral-500">
-              <span class="font-medium text-neutral-700">Diesel (est.)</span>
-              <span>₦{{rfp.diesel}}</span>
-            </div>
-            <div *ngIf="rfp.kerosene !== undefined && rfp.kerosene !== null" class="flex items-center justify-between text-neutral-500">
-              <span class="font-medium text-neutral-700">Kerosene (est.)</span>
-              <span>₦{{rfp.kerosene}}</span>
-            </div>
-            <div *ngIf="rfp.gas !== undefined && rfp.gas !== null" class="flex items-center justify-between text-neutral-500">
-              <span class="font-medium text-neutral-700">Gas (est.)</span>
-              <span>₦{{rfp.gas}}</span>
-            </div>
-          </ng-container>
+              <!-- Diesel -->
+              <div *ngIf="fs.diesel !== undefined" class="flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                  <svg class="w-4 h-4 text-neutral-600" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z"/>
+                  </svg>
+                  <span class="font-medium text-neutral-700">Diesel</span>
+                </div>
+                <div [ngClass]="{ 
+                  'px-2 py-0.5 rounded-full text-xs font-semibold bg-success-100 text-success-700': fs.diesel.available, 
+                  'px-2 py-0.5 rounded-full text-xs font-semibold bg-error-100 text-error-700': !fs.diesel.available 
+                }">
+                  <span *ngIf="fs.diesel.available">₦{{fs.diesel.price}}</span>
+                  <span *ngIf="!fs.diesel.available">Unavailable</span>
+                </div>
+              </div>
+              <div *ngIf="fs.diesel === undefined && station.rawFuelPrices?.diesel !== undefined" class="flex items-center justify-between text-neutral-500">
+                <div class="flex items-center gap-2">
+                  <svg class="w-4 h-4 text-neutral-400" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z"/>
+                  </svg>
+                  <span class="font-medium text-neutral-700">Diesel (est.)</span>
+                </div>
+                <span>{{ station.rawFuelPrices?.diesel ? ('₦' + station.rawFuelPrices!.diesel) : 'N/A'}}</span>
+              </div>
+
+            </ng-container>
+            <ng-container *ngIf="!station.fuelStatus && station.rawFuelPrices as rfp"> 
+              <!-- Fallback to rawFuelPrices if fuelStatus is completely null -->
+              <p class="text-xs italic text-neutral-500 mb-1">(Estimated prices based on brand)</p>
+              <div *ngIf="rfp.petrol !== undefined && rfp.petrol !== null" class="flex items-center justify-between text-neutral-500">
+                <div class="flex items-center gap-2">
+                  <svg class="w-4 h-4 text-neutral-400" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z"/>
+                  </svg>
+                  <span class="font-medium text-neutral-700">Petrol (est.)</span>
+                </div>
+                <span>₦{{rfp.petrol}}</span>
+              </div>
+              <div *ngIf="rfp.diesel !== undefined && rfp.diesel !== null" class="flex items-center justify-between text-neutral-500">
+                <div class="flex items-center gap-2">
+                  <svg class="w-4 h-4 text-neutral-400" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z"/>
+                  </svg>
+                  <span class="font-medium text-neutral-700">Diesel (est.)</span>
+                </div>
+                <span>₦{{rfp.diesel}}</span>
+              </div>
+              <div *ngIf="rfp.kerosene !== undefined && rfp.kerosene !== null" class="flex items-center justify-between text-neutral-500">
+                <div class="flex items-center gap-2">
+                  <svg class="w-4 h-4 text-neutral-400" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z"/>
+                  </svg>
+                  <span class="font-medium text-neutral-700">Kerosene (est.)</span>
+                </div>
+                <span>₦{{rfp.kerosene}}</span>
+              </div>
+              <div *ngIf="rfp.gas !== undefined && rfp.gas !== null" class="flex items-center justify-between text-neutral-500">
+                <div class="flex items-center gap-2">
+                  <svg class="w-4 h-4 text-neutral-400" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z"/>
+                  </svg>
+                  <span class="font-medium text-neutral-700">Gas (est.)</span>
+                </div>
+                <span>₦{{rfp.gas}}</span>
+              </div>
+            </ng-container>
           </div>
         </div>
         <div *ngIf="!station.fuelStatus && !station.rawFuelPrices">
@@ -109,15 +166,10 @@ import { Observable } from 'rxjs';
         <!-- Footer -->
         <div class="pt-4 border-t border-neutral-200 text-xs flex items-center justify-between">
           <div class="flex items-center gap-1 text-neutral-600">
-            <span class="w-4 h-4 text-neutral-500">🕒</span>
-            <span>{{getTimeAgo(station.lastReported)}}</span>
-          </div>
-          
-          <div *ngIf="station.reliabilityScore !== null && station.reliabilityScore !== undefined" class="flex items-center gap-1">
-            <span class="w-4 h-4 text-yellow-500">⭐</span>
-            <span class="text-sm font-medium text-neutral-600">
-              {{station.reliabilityScore.toFixed(1)}}
-            </span>
+            <svg class="w-4 h-4 text-neutral-500" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"/>
+            </svg>
+            <span class="text-sm font-medium">{{getTimeAgo(station.lastReported)}}</span>
           </div>
         </div>
       </div>
