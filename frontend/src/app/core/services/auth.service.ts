@@ -9,7 +9,8 @@ import {
   SignInWithPasswordCredentials,
   SignUpWithPasswordCredentials,
 } from '@supabase/supabase-js';
-import { BehaviorSubject, Observable } from 'rxjs';
+import { BehaviorSubject, Observable, of } from 'rxjs';
+import { catchError, retry, delay, switchMap, filter, take } from 'rxjs/operators';
 import { SupabaseService } from './supabase.service';
 import { Store } from '@ngrx/store';
 import * as AuthActions from '../../store/actions/auth.actions';
@@ -49,6 +50,28 @@ export class AuthService {
       }
     });
     this.loadInitialSession();
+  }
+
+  private handleAuthOperation<T>(operation: () => Promise<T>): Observable<T> {
+    return this.supabaseService.initialized$.pipe(
+      filter(initialized => initialized),
+      take(1),
+      switchMap(() => from(operation())),
+      retry({
+        count: 3,
+        delay: (error, retryCount) => {
+          if (error.message?.includes('lock') || error.message?.includes('LockManager')) {
+            console.warn(`Auth operation failed due to lock contention, retrying (${retryCount}/3)...`);
+            return of(null).pipe(delay(100 * retryCount));
+          }
+          throw error;
+        }
+      }),
+      catchError(error => {
+        console.error('Auth operation failed after retries:', error);
+        throw error;
+      })
+    );
   }
 
   private async loadInitialSession() {
