@@ -71,7 +71,7 @@ import { LoaderComponent } from '../../shared/components/loader/loader.component
           <app-station-card 
             *ngFor="let station of stations$ | async" 
             [station]="station"
-            (stationSelected)="onStationSelected($event)">
+            (viewDetails)="onStationSelected($event)">
           </app-station-card>
         </div>
       </section>

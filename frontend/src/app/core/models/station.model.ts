@@ -44,4 +44,5 @@ export interface Station {
   types?: string[]; // Google Place types
   detailsFetched?: boolean; // Flag to indicate if full Google Place Details have been fetched
   isLinking?: boolean; // Flag to indicate if ensureStationReference is in progress for this station
+  isFavorite?: boolean; // Flag to indicate if the station is marked as favorite by the user
 }
