@@ -2,7 +2,7 @@ import { Component, Input, Output, EventEmitter, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { Station, FuelStatus } from '../../../core/models/station.model';
-import { GasStationBrand } from '../../../../../shared/enums';
+import { GasStationBrand } from '@shared/enums';
 
 interface FuelDisplayInfo {
   type: 'reported' | 'estimated' | 'none';
