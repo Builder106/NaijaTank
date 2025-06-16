@@ -9,6 +9,7 @@ import { FooterComponent } from './shared/components/footer/footer.component';
 import { ToastComponent } from './shared/components/toast/toast.component';
 import { initGeolocation } from './store/actions/geolocation.actions';
 import * as AuthActions from './store/actions/auth.actions';
+import { inject } from '@vercel/analytics';
 
 @Component({
   selector: 'app-root',
@@ -48,6 +49,8 @@ export class AppComponent implements OnInit {
   }
 
   ngOnInit() {
+    // Initialize Vercel Analytics
+    inject();
     // Initialize geolocation
     this.store.dispatch(initGeolocation());
     // Check for existing auth session on app load
