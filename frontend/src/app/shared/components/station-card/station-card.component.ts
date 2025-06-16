@@ -113,7 +113,7 @@ import { Observable } from 'rxjs';
             <span>{{getTimeAgo(station.lastReported)}}</span>
           </div>
           
-          <div *ngIf="station.reliabilityScore !== null" class="flex items-center gap-1">
+          <div *ngIf="station.reliabilityScore !== null && station.reliabilityScore !== undefined" class="flex items-center gap-1">
             <span class="w-4 h-4 text-yellow-500">⭐</span>
             <span class="text-sm font-medium text-neutral-600">
               {{station.reliabilityScore.toFixed(1)}}

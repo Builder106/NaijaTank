@@ -45,9 +45,7 @@
             "index": "src/index.html",
             "browser": "src/main.ts",
             "outputPath": "dist/naijatank",
-            "polyfills": [
-              "zone.js"
-            ],
+            "polyfills": [],
             "scripts": [],
             "styles": [
               "src/styles.css"
