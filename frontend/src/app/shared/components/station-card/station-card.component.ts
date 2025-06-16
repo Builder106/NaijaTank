@@ -1,13 +1,22 @@
 import { Component, Input, Output, EventEmitter, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
-import { Station } from '../../../core/models/station.model';
+import { Station, FuelStatus } from '../../../core/models/station.model';
 import { StationService } from '../../../core/services/station.service';
 import { GasStationBrand } from '@shared/enums';
 import { Store } from '@ngrx/store';
 import { AppState } from '../../../store';
 import * as StationSelectors from '../../../store/selectors/station.selectors';
 import { Observable } from 'rxjs';
+
+interface FuelDisplayInfo {
+  type: 'reported' | 'estimated' | 'none';
+  available?: boolean;
+  price?: number | null;
+  queueLength?: string | null;
+  displayText: string;
+  statusClass: string;
+}
 
 @Component({
   selector: 'app-station-card',
@@ -57,109 +66,49 @@ import { Observable } from 'rxjs';
           <p>{{station.address || (station.source === 'google' && !(isLoadingDetails$ | async) ? 'Address not yet loaded' : 'Address not available')}}</p>
         </div>
         
-        <!-- Fuel Status (from station.fuelStatus or station.rawFuelPrices as fallback) -->
+        <!-- Fuel Status -->
         <div *ngIf="station.fuelStatus || station.rawFuelPrices">
-          <div class="text-sm font-semibold text-neutral-800 mb-2">Fuel Status</div>
-          <div class="space-y-2 text-xs">
-            <ng-container *ngIf="station.fuelStatus as fs">
-              <div *ngIf="fs.petrol !== undefined" class="flex items-center justify-between">
-                <div class="flex items-center gap-2">
-                  <svg class="w-4 h-4 text-neutral-600" fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z"/>
-                  </svg>
-                  <span class="font-medium text-neutral-700">Petrol</span>
+          <div class="text-sm font-semibold text-neutral-800 mb-3">Fuel Status</div>
+          <div class="space-y-2">
+            <!-- Dynamic Fuel Items -->
+            <div *ngFor="let fuelType of fuelTypesArray" class="fuel-item">
+              <ng-container *ngIf="getFuelDisplayInfo(fuelType) as info">
+                <div class="flex items-center justify-between p-2 rounded-lg border border-neutral-200 hover:border-neutral-300 transition-colors">
+                  <div class="flex items-center gap-3">
+                    <!-- Fuel Icon -->
+                    <div class="w-8 h-8 rounded-full flex items-center justify-center" [ngClass]="getFuelIconColor(fuelType)">
+                      <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                        <path [attr.d]="getFuelIconPath(fuelType)"/>
+                      </svg>
+                    </div>
+                    <!-- Fuel Name -->
+                    <span class="font-medium text-sm text-neutral-700">{{getFuelTypeName(fuelType)}}</span>
+                    <!-- Estimated Label -->
+                    <span *ngIf="info.type === 'estimated'" class="text-xs px-1.5 py-0.5 bg-neutral-100 text-neutral-600 rounded">est.</span>
+                  </div>
+                  <!-- Status/Price -->
+                  <div class="flex items-center gap-2">
+                    <span class="text-sm font-semibold" [ngClass]="info.statusClass">{{info.displayText}}</span>
+                    <!-- Queue indicator for reported fuel -->
+                    <span *ngIf="info.type === 'reported' && info.available && info.queueLength && info.queueLength !== 'None'" 
+                          class="text-xs px-1.5 py-0.5 bg-warning-100 text-warning-700 rounded-full">
+                      {{info.queueLength}}
+                    </span>
+                  </div>
                 </div>
-                <div [ngClass]="{ 
-                  'px-2 py-0.5 rounded-full text-xs font-semibold bg-success-100 text-success-700': fs.petrol.available, 
-                  'px-2 py-0.5 rounded-full text-xs font-semibold bg-error-100 text-error-700': !fs.petrol.available 
-                }">
-                  <span *ngIf="fs.petrol.available">₦{{fs.petrol.price}}<span *ngIf="fs.petrol.queueLength" class="ml-1 opacity-75"> ({{fs.petrol.queueLength}})</span></span>
-                  <span *ngIf="!fs.petrol.available">Unavailable</span>
-                </div>
-              </div>
-              <div *ngIf="fs.petrol === undefined && station.rawFuelPrices?.petrol !== undefined" class="flex items-center justify-between text-neutral-500">
-                <div class="flex items-center gap-2">
-                  <svg class="w-4 h-4 text-neutral-400" fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z"/>
-                  </svg>
-                  <span class="font-medium text-neutral-700">Petrol (est.)</span>
-                </div>
-                <span>{{ station.rawFuelPrices?.petrol ? ('₦' + station.rawFuelPrices!.petrol) : 'N/A'}}</span>
-              </div>
-
-              <!-- Diesel -->
-              <div *ngIf="fs.diesel !== undefined" class="flex items-center justify-between">
-                <div class="flex items-center gap-2">
-                  <svg class="w-4 h-4 text-neutral-600" fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z"/>
-                  </svg>
-                  <span class="font-medium text-neutral-700">Diesel</span>
-                </div>
-                <div [ngClass]="{ 
-                  'px-2 py-0.5 rounded-full text-xs font-semibold bg-success-100 text-success-700': fs.diesel.available, 
-                  'px-2 py-0.5 rounded-full text-xs font-semibold bg-error-100 text-error-700': !fs.diesel.available 
-                }">
-                  <span *ngIf="fs.diesel.available">₦{{fs.diesel.price}}</span>
-                  <span *ngIf="!fs.diesel.available">Unavailable</span>
-                </div>
-              </div>
-              <div *ngIf="fs.diesel === undefined && station.rawFuelPrices?.diesel !== undefined" class="flex items-center justify-between text-neutral-500">
-                <div class="flex items-center gap-2">
-                  <svg class="w-4 h-4 text-neutral-400" fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z"/>
-                  </svg>
-                  <span class="font-medium text-neutral-700">Diesel (est.)</span>
-                </div>
-                <span>{{ station.rawFuelPrices?.diesel ? ('₦' + station.rawFuelPrices!.diesel) : 'N/A'}}</span>
-              </div>
-
-            </ng-container>
-            <ng-container *ngIf="!station.fuelStatus && station.rawFuelPrices as rfp"> 
-              <!-- Fallback to rawFuelPrices if fuelStatus is completely null -->
-              <p class="text-xs italic text-neutral-500 mb-1">(Estimated prices based on brand)</p>
-              <div *ngIf="rfp.petrol !== undefined && rfp.petrol !== null" class="flex items-center justify-between text-neutral-500">
-                <div class="flex items-center gap-2">
-                  <svg class="w-4 h-4 text-neutral-400" fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z"/>
-                  </svg>
-                  <span class="font-medium text-neutral-700">Petrol (est.)</span>
-                </div>
-                <span>₦{{rfp.petrol}}</span>
-              </div>
-              <div *ngIf="rfp.diesel !== undefined && rfp.diesel !== null" class="flex items-center justify-between text-neutral-500">
-                <div class="flex items-center gap-2">
-                  <svg class="w-4 h-4 text-neutral-400" fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z"/>
-                  </svg>
-                  <span class="font-medium text-neutral-700">Diesel (est.)</span>
-                </div>
-                <span>₦{{rfp.diesel}}</span>
-              </div>
-              <div *ngIf="rfp.kerosene !== undefined && rfp.kerosene !== null" class="flex items-center justify-between text-neutral-500">
-                <div class="flex items-center gap-2">
-                  <svg class="w-4 h-4 text-neutral-400" fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z"/>
-                  </svg>
-                  <span class="font-medium text-neutral-700">Kerosene (est.)</span>
-                </div>
-                <span>₦{{rfp.kerosene}}</span>
-              </div>
-              <div *ngIf="rfp.gas !== undefined && rfp.gas !== null" class="flex items-center justify-between text-neutral-500">
-                <div class="flex items-center gap-2">
-                  <svg class="w-4 h-4 text-neutral-400" fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z"/>
-                  </svg>
-                  <span class="font-medium text-neutral-700">Gas (est.)</span>
-                </div>
-                <span>₦{{rfp.gas}}</span>
-              </div>
-            </ng-container>
+              </ng-container>
+            </div>
           </div>
         </div>
+        
+        <!-- No Fuel Status -->
         <div *ngIf="!station.fuelStatus && !station.rawFuelPrices">
           <div class="text-sm font-semibold text-neutral-800 mb-2">Fuel Status</div>
-          <div class="bg-neutral-100 text-neutral-600 p-3 rounded-lg text-center text-xs italic">
-            Fuel status not reported yet
+          <div class="bg-neutral-100 text-neutral-600 p-4 rounded-lg text-center">
+            <svg class="w-8 h-8 mx-auto mb-2 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 12h6m-6-4h6m2 5.291A7.962 7.962 0 0112 15c-2.34 0-4.29-1.009-5.824-2.563M15 9.34c-1.44-1.122-3.08-1.34-5-1.34s-3.56.218-5 1.34"/>
+            </svg>
+            <p class="text-sm italic">No fuel status reported yet</p>
           </div>
         </div>
         
@@ -183,6 +132,9 @@ export class StationCardComponent implements OnInit {
   isLoadingDetails$!: Observable<boolean>;
   isLinking$!: Observable<boolean>;
   
+  // Define fuel types in display order
+  fuelTypesArray: Array<'petrol' | 'diesel' | 'kerosene' | 'gas'> = ['petrol', 'diesel', 'kerosene', 'gas'];
+  
   constructor(
     private router: Router,
     private stationService: StationService,
@@ -200,6 +152,78 @@ export class StationCardComponent implements OnInit {
     this.stationSelected.emit(this.station);
   }
 
+  getFuelDisplayInfo(fuelType: 'petrol' | 'diesel' | 'kerosene' | 'gas'): FuelDisplayInfo {
+    // Check if we have reported fuel status
+    const reportedStatus = this.station.fuelStatus?.[fuelType];
+    if (reportedStatus !== undefined) {
+      if (reportedStatus.available) {
+        return {
+          type: 'reported',
+          available: true,
+          price: reportedStatus.price,
+          queueLength: reportedStatus.queueLength,
+          displayText: reportedStatus.price ? `₦${reportedStatus.price}` : 'Available',
+          statusClass: 'text-success-600'
+        };
+      } else {
+        return {
+          type: 'reported',
+          available: false,
+          displayText: 'Unavailable',
+          statusClass: 'text-error-600'
+        };
+      }
+    }
+
+    // Check if we have estimated prices
+    const estimatedPrice = this.station.rawFuelPrices?.[fuelType];
+    if (estimatedPrice !== undefined && estimatedPrice !== null) {
+      return {
+        type: 'estimated',
+        price: estimatedPrice,
+        displayText: `₦${estimatedPrice}`,
+        statusClass: 'text-neutral-600'
+      };
+    }
+
+    // No data available
+    return {
+      type: 'none',
+      displayText: 'N/A',
+      statusClass: 'text-neutral-400'
+    };
+  }
+
+  getFuelIconPath(fuelType: string): string {
+    const icons = {
+      petrol: 'M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z',
+      diesel: 'M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z',
+      kerosene: 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z',
+      gas: 'M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z'
+    };
+    return icons[fuelType as keyof typeof icons] || icons.petrol;
+  }
+
+  getFuelIconColor(fuelType: string): string {
+    const colors = {
+      petrol: 'bg-blue-100 text-blue-600',
+      diesel: 'bg-orange-100 text-orange-600', 
+      kerosene: 'bg-purple-100 text-purple-600',
+      gas: 'bg-green-100 text-green-600'
+    };
+    return colors[fuelType as keyof typeof colors] || colors.petrol;
+  }
+
+  getFuelTypeName(fuelType: string): string {
+    const names = {
+      petrol: 'Petrol',
+      diesel: 'Diesel',
+      kerosene: 'Kerosene',
+      gas: 'Gas'
+    };
+    return names[fuelType as keyof typeof names] || fuelType;
+  }
+
   getTimeAgo(dateString: string | null): string {
     if (!dateString) return 'N/A';
     const date = new Date(dateString);
@@ -209,15 +233,14 @@ export class StationCardComponent implements OnInit {
     
     if (diffMins < 1) return 'just now';
     if (diffMins < 60) return `${diffMins}m ago`;
-      const hours = Math.floor(diffMins / 60);
+    const hours = Math.floor(diffMins / 60);
     if (hours < 24) return `${hours}h ago`;
     const days = Math.floor(hours / 24);
-      return `${days}d ago`;
-    }
+    return `${days}d ago`;
+  }
 
   getBrandName(brand: GasStationBrand | null): string {
     if (!brand) return '';
-    // Return the string value of the enum
     return GasStationBrand[brand as keyof typeof GasStationBrand] || brand.toString(); 
   }
 
