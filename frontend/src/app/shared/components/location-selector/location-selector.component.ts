@@ -85,7 +85,7 @@ export class LocationSelectorComponent implements OnInit, AfterViewInit, OnDestr
             this.store.dispatch(GeolocationActions.setManualLocation({ latitude: lat, longitude: lng }));
             
             // Dispatch action to re-fetch stations based on the new location
-            this.store.dispatch(StationActions.loadStations({ latitude: lat, longitude: lng }));
+            this.store.dispatch(StationActions.loadStations({ latitude: lat, longitude: lng, radiusKm: 10 }));
 
           } else {
             console.warn('Selected place does not have geometry or location.');
