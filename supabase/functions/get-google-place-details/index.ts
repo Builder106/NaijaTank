@@ -26,9 +26,6 @@ const FIELD_MASK = [
   'userRatingCount',
   'iconMaskBaseUri',
   'iconBackgroundColor',
-  'photos', // Returns array of photo references; actual photos need separate calls
-  'reviews', // Returns array of up to 5 reviews
-  'fuelOptions' // Enterprise SKU
 ].join(',');
 
 Deno.serve(async (req: Request) => {

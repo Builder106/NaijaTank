@@ -7,6 +7,7 @@ import { AppState } from '../../store';
 import { Station } from '../../core/models/station.model';
 import * as StationActions from '../../store/actions/station.actions';
 import { EnhancedStationCardComponent } from '../../shared/components/enhanced-station-card/enhanced-station-card.component';
+import { GeoService } from '../../core/services/geo.service';
 
 @Component({
   selector: 'app-home',
@@ -102,13 +103,30 @@ export class HomeComponent implements OnInit {
 
   constructor(
     private store: Store<AppState>,
-    private router: Router
+    private router: Router,
+    private geoService: GeoService
   ) {
     this.stations$ = this.store.select(state => state.stations.stations.slice(0, 3));
   }
 
   ngOnInit(): void {
-    // Home component initializes with existing data
+    this.geoService.getCurrentPosition().subscribe({
+      next: (position) => {
+        this.store.dispatch(StationActions.loadStations({
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude,
+          radiusKm: 10
+        }));
+      },
+      error: (err) => {
+        console.warn('Failed to get user location, defaulting to Lagos:', err);
+        this.store.dispatch(StationActions.loadStations({
+          latitude: 6.5244, // Default to Lagos
+          longitude: 3.3792,
+          radiusKm: 10
+        }));
+      }
+    });
   }
 
   onStationSelected(station: Station): void {

@@ -162,11 +162,17 @@ export class StationMapComponent implements OnInit, AfterViewInit, OnDestroy {
     });
 
     this.subscriptions.add(
-      this.userPosition$.pipe(filter(pos => pos.latitude !== null && pos.longitude !== null)).subscribe(position => {
-        if (this.map?.getCenter()) {
+      this.userPosition$.pipe(
+        filter(pos => 
+          pos.latitude !== null && typeof pos.latitude === 'number' && isFinite(pos.latitude) &&
+          pos.longitude !== null && typeof pos.longitude === 'number' && isFinite(pos.longitude)
+        )
+      ).subscribe(position => {
+        if (this.map) {
           const userLocation = new google.maps.LatLng(position.latitude!, position.longitude!);
-          if (this.map.getCenter()?.equals(new google.maps.LatLng(defaultCenter.lat, defaultCenter.lng))) {
-            this.map?.setCenter(userLocation);
+          const currentMapCenter = this.map.getCenter();
+          if (currentMapCenter && currentMapCenter.equals(new google.maps.LatLng(defaultCenter.lat, defaultCenter.lng))) {
+            this.map.setCenter(userLocation);
           }
           this.updateUserMarker(userLocation);
         }
