@@ -1,7 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterOutlet } from '@angular/router';
+import { RouterOutlet, Router, NavigationEnd } from '@angular/router';
 import { Store } from '@ngrx/store';
+import { filter } from 'rxjs/operators';
 import { AppState } from './store';
 import { TranslateService } from '@ngx-translate/core';
 import { NavbarComponent } from './shared/components/navbar/navbar.component';
@@ -23,19 +24,22 @@ import { inject } from '@vercel/analytics';
   ],
   template: `
     <div class="flex flex-col min-h-screen">
-      <app-navbar></app-navbar>
+      <app-navbar *ngIf="!isHomePage"></app-navbar>
       <main class="flex-grow">
         <router-outlet></router-outlet>
       </main>
-      <app-footer></app-footer>
+      <app-footer *ngIf="!isHomePage"></app-footer>
       <app-toast></app-toast>
     </div>
   `,
 })
 export class AppComponent implements OnInit {
+  isHomePage = false;
+
   constructor(
     private store: Store<AppState>,
-    private translate: TranslateService
+    private translate: TranslateService,
+    private router: Router
   ) {
     // Set available languages
     translate.addLangs(['en', 'pidgin', 'yoruba', 'hausa', 'igbo']);
@@ -46,6 +50,16 @@ export class AppComponent implements OnInit {
     // Use browser language if available, otherwise use default
     const browserLang = translate.getBrowserLang();
     translate.use(browserLang?.match(/en|pidgin|yoruba|hausa|igbo/) ? browserLang : 'en');
+
+    // Listen to route changes to determine if we're on the home page
+    this.router.events.pipe(
+      filter(event => event instanceof NavigationEnd)
+    ).subscribe((event: NavigationEnd) => {
+      this.isHomePage = event.url === '/' || event.url === '/home';
+    });
+
+    // Set initial state
+    this.isHomePage = this.router.url === '/' || this.router.url === '/home';
   }
 
   ngOnInit() {
