@@ -34,7 +34,6 @@ import { GeoService } from '../../core/services/geo.service';
           <img src="https://images.pexels.com/photos/4429282/pexels-photo-4429282.jpeg" 
                alt="Nigeria landscape" 
                class="w-full h-full object-cover">
-        </video>
         <!-- Dark overlay for text readability -->
         <div class="absolute inset-0 bg-black bg-opacity-40"></div>
           muted 
