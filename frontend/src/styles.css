@@ -201,4 +201,33 @@
   .scrollbar-hide::-webkit-scrollbar {
     display: none;
   }
+
+  /* African-inspired patterns and textures */
+  .african-geometric {
+    background-image: 
+      linear-gradient(45deg, transparent 40%, rgba(0, 135, 81, 0.1) 40%, rgba(0, 135, 81, 0.1) 60%, transparent 60%),
+      linear-gradient(-45deg, transparent 40%, rgba(245, 158, 11, 0.1) 40%, rgba(245, 158, 11, 0.1) 60%, transparent 60%);
+    background-size: 20px 20px;
+  }
+
+  .kente-pattern {
+    background: linear-gradient(90deg, 
+      var(--color-primary-500) 0%, 
+      var(--color-warning-500) 25%, 
+      var(--color-error-500) 50%, 
+      var(--color-primary-500) 75%, 
+      var(--color-warning-500) 100%);
+    background-size: 40px 4px;
+  }
+
+  /* Modern African color palette utilities */
+  .text-earth { color: #8B4513; }
+  .text-sunset { color: #FF6B35; }
+  .text-savanna { color: #F4A460; }
+  .text-baobab { color: #654321; }
+  
+  .bg-earth { background-color: #8B4513; }
+  .bg-sunset { background-color: #FF6B35; }
+  .bg-savanna { background-color: #F4A460; }
+  .bg-baobab { background-color: #654321; }
 }
