@@ -802,6 +802,7 @@ export class HomeComponent implements OnInit, OnDestroy {
       background-image: 
         radial-gradient(circle at 25% 25%, rgba(255, 255, 255, 0.1) 2px, transparent 2px),
         radial-gradient(circle at 75% 75%, rgba(255, 255, 255, 0.1) 2px, transparent 2px);
+    }
   constructor(
     private store: Store<AppState>,
     private router: Router,
