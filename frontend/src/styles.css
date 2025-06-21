@@ -55,9 +55,19 @@
     -moz-osx-font-smoothing: grayscale;
   }
 
-  body {
+  html, body {
     @apply bg-neutral-50 text-neutral-900;
     min-height: 100vh;
+    /* Hide scrollbar for Firefox */
+    scrollbar-width: none;
+    /* Hide scrollbar for IE and Edge (older versions) */
+    -ms-overflow-style: none;
+  }
+
+  /* Hide scrollbar for WebKit browsers (Chrome, Safari, Opera, newer Edge) */
+  html::-webkit-scrollbar,
+  body::-webkit-scrollbar {
+    display: none;
   }
 
   h1, h2, h3, h4, h5, h6 {
@@ -230,4 +240,31 @@
   .bg-sunset { background-color: #FF6B35; }
   .bg-savanna { background-color: #F4A460; }
   .bg-baobab { background-color: #654321; }
+}
+
+/* Custom Font: Africa */
+@font-face {
+  font-family: 'Africa';
+  src: url('/fonts/Africa.ttf') format('truetype'); /* Make sure Africa.ttf is in /frontend/public/fonts/ */
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Helper class to apply the Africa font */
+.font-africa {
+  font-family: 'Africa', sans-serif; /* Fallback to a generic sans-serif */
+}
+
+/* Styling for 'Nigeria's' text blocks */
+.text-block-green {
+  color: #008751; /* Nigerian Green */
+}
+
+.text-block-white {
+  color: #FFFFFF; /* White */
+}
+
+.text-hero-black {
+  color: #000000; /* Black */
 }

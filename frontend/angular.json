@@ -40,7 +40,8 @@
           "options": {
             "assets": [
               "src/assets",
-              "src/favicon.ico"
+              "src/favicon.ico",
+              { "glob": "**/*", "input": "public/", "output": "/" }
             ],
             "index": "src/index.html",
             "browser": "src/main.ts",
