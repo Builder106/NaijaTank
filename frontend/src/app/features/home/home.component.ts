@@ -8,6 +8,8 @@ import { Station } from '../../core/models/station.model';
 import * as StationActions from '../../store/actions/station.actions';
 import { EnhancedStationCardComponent } from '../../shared/components/enhanced-station-card/enhanced-station-card.component';
 import { GeoService } from '../../core/services/geo.service';
+import { gsap } from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
 @Component({
   selector: 'app-home',
@@ -52,7 +54,7 @@ import { GeoService } from '../../core/services/geo.service';
         <div class="hero-actions flex flex-col sm:flex-row gap-4 mb-12">
           <button 
             (click)="exploreStations()"
-            class="cta-primary px-8 py-4 bg-primary-500 hover:bg-primary-600 text-white font-semibold rounded-lg transition-all duration-300 transform hover:scale-105 hover:shadow-xl">
+            class="cta-primary px-8 py-4 bg-primary-500 hover:bg-primary-600 text-white font-semibold rounded-lg transition-all duration-300 transform hover:scale-105 hover:shadow-xl cursor-pointer">
             Explore Stations
           </button>
           <a 
@@ -69,91 +71,6 @@ import { GeoService } from '../../core/services/geo.service';
           </div>
           <div class="scroll-arrow w-6 h-10 border-2 border-white rounded-full flex justify-center">
             <div class="scroll-dot w-1 h-3 bg-white rounded-full mt-2 animate-bounce"></div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Stats Section -->
-    <section class="stats-section py-20 bg-gradient-to-br from-primary-900 via-primary-800 to-primary-700">
-      <div class="container mx-auto px-4">
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
-          <div class="stat-item" [class.animate-in]="statsVisible">
-            <div class="stat-number text-4xl md:text-5xl font-bold text-yellow-400 mb-2">2,500+</div>
-            <div class="stat-label text-white text-sm md:text-base opacity-80">Stations Tracked</div>
-          </div>
-          <div class="stat-item" [class.animate-in]="statsVisible">
-            <div class="stat-number text-4xl md:text-5xl font-bold text-yellow-400 mb-2">50K+</div>
-            <div class="stat-label text-white text-sm md:text-base opacity-80">Active Users</div>
-          </div>
-          <div class="stat-item" [class.animate-in]="statsVisible">
-            <div class="stat-number text-4xl md:text-5xl font-bold text-yellow-400 mb-2">24/7</div>
-            <div class="stat-label text-white text-sm md:text-base opacity-80">Live Updates</div>
-          </div>
-          <div class="stat-item" [class.animate-in]="statsVisible">
-            <div class="stat-number text-4xl md:text-5xl font-bold text-yellow-400 mb-2">98%</div>
-            <div class="stat-label text-white text-sm md:text-base opacity-80">Accuracy Rate</div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Features Section -->
-    <section class="features-section py-20 bg-white">
-      <div class="container mx-auto px-4">
-        <div class="text-center mb-16">
-          <h2 class="text-4xl md:text-5xl font-bold text-primary-900 mb-6">
-            Intelligent Fuel Discovery
-          </h2>
-          <p class="text-xl text-gray-600 max-w-3xl mx-auto">
-            Powered by community insights and real-time data to help you find fuel faster across Nigeria.
-          </p>
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-          <!-- Real-time Updates -->
-          <div class="feature-card group">
-            <div class="feature-icon mb-6">
-              <div class="w-16 h-16 bg-primary-100 rounded-full flex items-center justify-center group-hover:bg-primary-500 transition-colors duration-300">
-                <svg class="w-8 h-8 text-primary-500 group-hover:text-white transition-colors duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-                </svg>
-              </div>
-            </div>
-            <h3 class="text-2xl font-bold text-primary-900 mb-4">Real-time Updates</h3>
-            <p class="text-gray-600 leading-relaxed">
-              Get instant notifications about fuel availability, prices, and queue lengths from our community of verified users.
-            </p>
-          </div>
-
-          <!-- Smart Recommendations -->
-          <div class="feature-card group">
-            <div class="feature-icon mb-6">
-              <div class="w-16 h-16 bg-primary-100 rounded-full flex items-center justify-center group-hover:bg-primary-500 transition-colors duration-300">
-                <svg class="w-8 h-8 text-primary-500 group-hover:text-white transition-colors duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-                </svg>
-              </div>
-            </div>
-            <h3 class="text-2xl font-bold text-primary-900 mb-4">Smart Recommendations</h3>
-            <p class="text-gray-600 leading-relaxed">
-              AI-powered suggestions based on your location, preferences, and real-time traffic to find the best stations for you.
-            </p>
-          </div>
-
-          <!-- Community Driven -->
-          <div class="feature-card group">
-            <div class="feature-icon mb-6">
-              <div class="w-16 h-16 bg-primary-100 rounded-full flex items-center justify-center group-hover:bg-primary-500 transition-colors duration-300">
-                <svg class="w-8 h-8 text-primary-500 group-hover:text-white transition-colors duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                </svg>
-              </div>
-            </div>
-            <h3 class="text-2xl font-bold text-primary-900 mb-4">Community Driven</h3>
-            <p class="text-gray-600 leading-relaxed">
-              Built by Nigerians, for Nigerians. Every report helps fellow citizens save time and avoid empty stations.
-            </p>
           </div>
         </div>
       </div>
@@ -232,6 +149,67 @@ import { GeoService } from '../../core/services/geo.service';
             </div>
           </div>
         </div>
+      </div>
+    </section>
+
+    <!-- How it Works Section - Outer Title Wrapper -->
+    <section class="how-it-works-title-wrapper bg-white py-12 md:py-20">
+      <div class="container mx-auto px-4 text-center">
+        <h2 class="text-4xl md:text-5xl font-bold text-primary-900 mb-6">
+          How NaijaTank Works
+        </h2>
+        <p class="text-xl text-gray-600 max-w-3xl mx-auto">
+          Finding fuel is simple. Reporting is seamless.
+        </p>
+      </div>
+    </section>
+
+    <!-- Pinned Viewport for Horizontal Scroll -->
+    <section class="how-it-works-pinned-viewport">
+      <!-- Nigerian Flag Background -->
+      <div class="flag-background">
+        <div class="flag-stripe-green"></div>
+        <div class="flag-stripe-white"></div>
+        <div class="flag-stripe-green"></div>
+      </div>
+
+      <!-- Horizontal Track containing panels -->
+      <div class="how-it-works-track">
+        <article class="how-it-works-panel">
+          <div class="panel-content-wrapper">
+            <div class="panel-content">
+              <div class="text-6xl md:text-7xl font-bold text-primary-500 mb-4 opacity-50">01</div>
+              <h3 class="text-2xl md:text-3xl font-bold text-primary-900 mb-4">Search & Discover</h3>
+              <p class="text-base md:text-lg text-gray-700 leading-relaxed">
+                Use our intuitive map or search bar to find petrol stations near you or your destination. Filter by fuel type, amenities, and more.
+              </p>
+            </div>
+          </div>
+        </article>
+
+        <article class="how-it-works-panel">
+          <div class="panel-content-wrapper">
+            <div class="panel-content">
+              <div class="text-6xl md:text-7xl font-bold text-primary-500 mb-4 opacity-50">02</div>
+              <h3 class="text-2xl md:text-3xl font-bold text-primary-900 mb-4">Check Real-Time Status</h3>
+              <p class="text-base md:text-lg text-gray-700 leading-relaxed">
+                View live updates on fuel availability, current prices, and queue lengths, all reported by our active community.
+              </p>
+            </div>
+          </div>
+        </article>
+
+        <article class="how-it-works-panel">
+          <div class="panel-content-wrapper">
+            <div class="panel-content">
+              <div class="text-6xl md:text-7xl font-bold text-primary-500 mb-4 opacity-50">03</div>
+              <h3 class="text-2xl md:text-3xl font-bold text-primary-900 mb-4">Report & Earn</h3>
+              <p class="text-base md:text-lg text-gray-700 leading-relaxed">
+                Share your fuelling experience. Report prices, queue times, and availability to help others and earn community points.
+              </p>
+            </div>
+          </div>
+        </article>
       </div>
     </section>
 
@@ -370,51 +348,6 @@ import { GeoService } from '../../core/services/geo.service';
       background: rgba(255, 255, 255, 0.1);
     }
 
-    /* Stats Section */
-    .stats-section {
-      background: linear-gradient(135deg, #065f46 0%, #047857 50%, #059669 100%);
-    }
-
-    .stat-item {
-      opacity: 0;
-      transform: translateY(30px);
-      transition: all 0.6s ease-out;
-    }
-
-    .stat-item.animate-in {
-      opacity: 1;
-      transform: translateY(0);
-    }
-
-    .stat-item:nth-child(1).animate-in { transition-delay: 0.1s; }
-    .stat-item:nth-child(2).animate-in { transition-delay: 0.2s; }
-    .stat-item:nth-child(3).animate-in { transition-delay: 0.3s; }
-    .stat-item:nth-child(4).animate-in { transition-delay: 0.4s; }
-
-    /* Feature Cards */
-    .feature-card {
-      padding: 2rem;
-      border-radius: 1rem;
-      background: white;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-      transition: all 0.3s ease;
-      border: 1px solid rgba(0, 135, 81, 0.1);
-    }
-
-    .feature-card:hover {
-      transform: translateY(-8px);
-      box-shadow: 0 20px 40px rgba(0, 135, 81, 0.15);
-    }
-
-    /* Video Cards */
-    .video-card {
-      transition: all 0.3s ease;
-    }
-
-    .video-card:hover {
-      transform: translateY(-4px);
-    }
-
     /* African Pattern */
     .african-pattern {
       background-image: 
@@ -477,13 +410,85 @@ import { GeoService } from '../../core/services/geo.service';
     .video-container:hover video {
       filter: brightness(1);
     }
+
+    /* How it Works Section Styles */
+    .how-it-works-title-wrapper {
+      /* Uses Tailwind for bg and padding */
+    }
+
+    .how-it-works-pinned-viewport {
+      height: 100vh; /* Full viewport height for the parallax effect */
+      width: 100vw;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .flag-background {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      z-index: 0; /* Behind the track */
+    }
+    .flag-stripe-green {
+      width: 33.3333%;
+      height: 100%;
+      background-color: #008751; /* Nigerian Green */
+    }
+    .flag-stripe-white {
+      width: 33.3333%;
+      height: 100%;
+      background-color: #FFFFFF;
+    }
+
+    .how-it-works-track {
+      display: flex;
+      height: 100%;
+      position: relative;
+      z-index: 1; /* Above the flag */
+      /* Width is set by JS: numPanels * 100vw */
+    }
+
+    .how-it-works-panel {
+      width: 100vw;
+      height: 100%;
+      flex-shrink: 0; /* Prevent panels from shrinking */
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem; /* Tailwind p-8 */
+    }
+
+    .panel-content-wrapper {
+      /* This wrapper helps in centering and constraining the .panel-content box */
+       display: flex;
+       align-items: center;
+       justify-content: center;
+       width: 100%;
+       height: 100%;
+    }
+
+    .panel-content {
+      background-color: rgba(255, 255, 255, 0.9); /* Slightly more opaque for readability */
+      padding: 2rem; /* Tailwind p-8, md:p-10 */
+      border-radius: 0.75rem; /* Tailwind rounded-xl */
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04); /* Tailwind shadow-xl */
+      max-width: 90vw; /* Responsive max width */
+      width: auto; /* Allow content to dictate width up to max-width */
+      text-align: center;
+    }
+
+    @media (min-width: 768px) {
+      .panel-content {
+        padding: 2.5rem; /* md:p-10 */
+        max-width: 500px; /* Fixed max-width on larger screens */
+      }
+    }
   `]
 })
 export class HomeComponent implements OnInit, OnDestroy, AfterViewInit {
   @ViewChild('heroVideo') heroVideo!: ElementRef<HTMLVideoElement>;
   
   stations$: Observable<Station[]>;
-  statsVisible = false;
   private subscriptions = new Subscription();
   private videoElement!: HTMLVideoElement;
   private canPlayListener!: () => void;
@@ -499,6 +504,7 @@ export class HomeComponent implements OnInit, OnDestroy, AfterViewInit {
   ngOnInit(): void {
     this.loadNearbyStations();
     this.setupScrollAnimations();
+    gsap.registerPlugin(ScrollTrigger); // Register plugin once
   }
 
   ngAfterViewInit(): void {
@@ -527,6 +533,7 @@ export class HomeComponent implements OnInit, OnDestroy, AfterViewInit {
         this.videoElement.addEventListener('canplay', this.canPlayListener, { once: true });
       }
     }
+    this.setupHowItWorksAnimation();
   }
 
   ngOnDestroy(): void {
@@ -536,6 +543,7 @@ export class HomeComponent implements OnInit, OnDestroy, AfterViewInit {
       // Though { once: true } largely handles this, explicit removal is safer.
       this.videoElement.removeEventListener('canplay', this.canPlayListener);
     }
+    ScrollTrigger.getAll().forEach((trigger: any) => trigger.kill()); // Kill GSAP ScrollTriggers
   }
 
   private loadNearbyStations(): void {
@@ -563,21 +571,46 @@ export class HomeComponent implements OnInit, OnDestroy, AfterViewInit {
       (entries) => {
         entries.forEach(entry => {
           if (entry.isIntersecting) {
-            if (entry.target.classList.contains('stats-section')) {
-              this.statsVisible = true;
-            }
+            // Potentially add more animations here for other sections
           }
         });
       },
-      { threshold: 0.3 }
+      { threshold: 0.3 } 
     );
 
     setTimeout(() => {
-      const statsSection = document.querySelector('.stats-section');
-      if (statsSection) {
-        observer.observe(statsSection);
-      }
-    }, 100);
+      // Observe other sections as needed
+    }, 100); // Delay to ensure elements are in the DOM
+  }
+
+  private setupHowItWorksAnimation(): void {
+    const track = document.querySelector('.how-it-works-track') as HTMLElement;
+    const panels = gsap.utils.toArray(".how-it-works-panel") as HTMLElement[];
+    
+    if (track && panels.length > 0) {
+      const numPanels = panels.length;
+      // Ensure the track is wide enough to hold all panels side-by-side
+      gsap.set(track, { width: numPanels * 100 + 'vw' });
+
+      gsap.to(track, {
+        xPercent: -100 * (numPanels - 1),
+        ease: "none", // Linear movement for scrub
+        scrollTrigger: {
+          trigger: ".how-it-works-pinned-viewport",
+          pin: true,
+          scrub: 0.5, // Smooth scrubbing
+          // markers: true, // Uncomment for debugging aid
+          start: "top top", // Start pinning and animation when top of viewport hits top of trigger
+          end: () => "+=" + (track.offsetWidth - window.innerWidth), // End after scrolling the full width of the track minus one viewport width
+          snap: {
+            snapTo: 1 / (numPanels - 1), // Snap to the start of each panel
+            duration: { min: 0.2, max: 0.3 },
+            ease: "power1.inOut"
+          },
+          invalidateOnRefresh: true // Recalculate ScrollTrigger on window resize
+        }
+      });
+    }
   }
 
   exploreStations(): void {
