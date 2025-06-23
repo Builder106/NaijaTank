@@ -96,9 +96,6 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
                 <div class="text-4xl md:text-5xl font-bold text-primary-500 mb-2 opacity-50">01</div>
               </div>
               <h3 class="text-2xl md:text-3xl font-bold text-primary-900 mb-4 text-center">Locate & Discover</h3>
-              <p class="text-base md:text-lg text-gray-700 leading-relaxed text-center">
-                Find petrol stations near you with our intelligent location system. Get real-time directions and discover the best fuel options in your area.
-              </p>
             </div>
           </div>
         </article>
