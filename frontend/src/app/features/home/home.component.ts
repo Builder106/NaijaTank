@@ -91,10 +91,13 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
         <article class="how-it-works-panel">
           <div class="panel-content-wrapper">
             <div class="panel-content">
-              <div class="text-6xl md:text-7xl font-bold text-primary-500 mb-4 opacity-50">01</div>
-              <h3 class="text-2xl md:text-3xl font-bold text-primary-900 mb-4">Search & Discover</h3>
-              <p class="text-base md:text-lg text-gray-700 leading-relaxed">
-                Use our intuitive map or search bar to find petrol stations near you or your destination. Filter by fuel type, amenities, and more.
+              <div class="flex flex-col items-center mb-6">
+                <img src="/how-it-works/Locate.svg" alt="Locate stations" class="w-24 h-24 md:w-32 md:h-32 mb-4 opacity-80 hover:opacity-100 transition-opacity duration-300">
+                <div class="text-4xl md:text-5xl font-bold text-primary-500 mb-2 opacity-50">01</div>
+              </div>
+              <h3 class="text-2xl md:text-3xl font-bold text-primary-900 mb-4 text-center">Locate & Discover</h3>
+              <p class="text-base md:text-lg text-gray-700 leading-relaxed text-center">
+                Find petrol stations near you with our intelligent location system. Get real-time directions and discover the best fuel options in your area.
               </p>
             </div>
           </div>
