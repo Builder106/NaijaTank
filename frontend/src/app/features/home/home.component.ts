@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, ViewChild, ElementRef, AfterViewInit } from '@angular/core';
+import { Component, OnInit, OnDestroy, ViewChild, ElementRef, AfterViewInit, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 import { Store } from '@ngrx/store';
@@ -10,6 +10,8 @@ import { EnhancedStationCardComponent } from '../../shared/components/enhanced-s
 import { GeoService } from '../../core/services/geo.service';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { create } from '@lottiefiles/lottie-interactivity';
+import '@lottiefiles/lottie-player';
 
 @Component({
   selector: 'app-home',
@@ -19,6 +21,7 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
     RouterModule,
     EnhancedStationCardComponent
   ],
+  schemas: [CUSTOM_ELEMENTS_SCHEMA],
   template: `
     <!-- Hero Section with Video Background -->
     <section class="hero-section relative min-h-screen overflow-hidden">
@@ -91,11 +94,29 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
         <article class="how-it-works-panel">
           <div class="panel-content-wrapper">
             <div class="panel-content">
-              <div class="flex flex-col items-center mb-6">
-                <img src="/how-it-works/Locate.svg" alt="Locate stations" class="w-24 h-24 md:w-32 md:h-32 mb-4 opacity-80 hover:opacity-100 transition-opacity duration-300">
-                <div class="text-4xl md:text-5xl font-bold text-primary-500 mb-2 opacity-50">01</div>
+              <h2 class="text-4xl md:text-5xl lg:text-6xl font-africa text-primary-900 mb-6 text-outline-white">
+                How it Works
+              </h2>
+              <p class="text-lg text-gray-700">
+                Follow these simple steps to make the most of NaijaTank.
+              </p>
+            </div>
+          </div>
+        </article>
+
+        <article class="how-it-works-panel">
+          <div class="panel-content-wrapper">
+            <div class="panel-content">
+              <div class="flex flex-col items-center w-full">
+                <lottie-player 
+                  #lottieContainerLocate 
+                  id="locateLottiePanelAnimation" 
+                  src="/how-it-works/locate_entrance.json"
+                  class="w-full h-auto mb-4 transition-opacity duration-300">
+                </lottie-player>
+                <div class="text-4xl md:text-5xl font-bold text-primary-500 mb-2 opacity-50">1</div>
+                <h3 class="font-africa text-2xl md:text-3xl mb-4 text-center">Locate</h3>
               </div>
-              <h3 class="text-2xl md:text-3xl font-bold text-primary-900 mb-4 text-center">Locate & Discover</h3>
             </div>
           </div>
         </article>
@@ -103,11 +124,18 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
         <article class="how-it-works-panel">
           <div class="panel-content-wrapper">
             <div class="panel-content">
-              <div class="text-6xl md:text-7xl font-bold text-primary-500 mb-4 opacity-50">02</div>
-              <h3 class="text-2xl md:text-3xl font-bold text-primary-900 mb-4">Check Real-Time Status</h3>
-              <p class="text-base md:text-lg text-gray-700 leading-relaxed">
-                View live updates on fuel availability, current prices, and queue lengths, all reported by our active community.
-              </p>
+              <div class="flex flex-col items-center w-full">
+                <lottie-player 
+                  #lottieContainerReport
+                  id="reportLottiePanelAnimation" 
+                  src="/how-it-works/report.json"
+                  class="w-full h-auto mb-4 transition-opacity duration-300"
+                  autoplay
+                  loop>
+                </lottie-player>
+                <div class="text-4xl md:text-5xl font-bold text-primary-500 mb-2 opacity-50">2</div>
+                <h3 class="text-2xl font-africa md:text-3xl font-bold text-primary-900 mb-4 text-center">Report</h3>
+              </div>
             </div>
           </div>
         </article>
@@ -115,11 +143,18 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
         <article class="how-it-works-panel">
           <div class="panel-content-wrapper">
             <div class="panel-content">
-              <div class="text-6xl md:text-7xl font-bold text-primary-500 mb-4 opacity-50">03</div>
-              <h3 class="text-2xl md:text-3xl font-bold text-primary-900 mb-4">Report & Earn</h3>
-              <p class="text-base md:text-lg text-gray-700 leading-relaxed">
-                Share your fuelling experience. Report prices, queue times, and availability to help others and earn community points.
-              </p>
+              <div class="flex flex-col items-center w-full">
+                <lottie-player 
+                  #lottieContainerShare
+                  id="shareLottiePanelAnimation" 
+                  src="/how-it-works/share.json"
+                  class="w-full h-auto mb-4 transition-opacity duration-300"
+                  autoplay
+                  loop>
+                </lottie-player>
+                <div class="text-4xl md:text-5xl font-bold text-primary-500 mb-2 opacity-50">3</div>
+                <h3 class="text-2xl font-africa md:text-3xl font-bold text-primary-900 mb-4 text-center">Share</h3>
+              </div>
             </div>
           </div>
         </article>
@@ -358,6 +393,7 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
       height: 100%;
       position: relative;
       z-index: 1; /* Above the flag */
+      will-change: transform; /* Hint for smoother animations */
       /* Width is set by JS: numPanels * 100vw */
     }
 
@@ -400,11 +436,18 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
 })
 export class HomeComponent implements OnInit, OnDestroy, AfterViewInit {
   @ViewChild('heroVideo') heroVideo!: ElementRef<HTMLVideoElement>;
+  @ViewChild('lottieContainerLocate') lottieContainerLocate!: ElementRef<HTMLDivElement>;
+  @ViewChild('lottieContainerReport') lottieContainerReport!: ElementRef<HTMLDivElement>;
+  @ViewChild('lottieContainerShare') lottieContainerShare!: ElementRef<HTMLDivElement>;
   
   stations$: Observable<Station[]>;
   private subscriptions = new Subscription();
   private videoElement!: HTMLVideoElement;
   private canPlayListener!: () => void;
+  
+  // Properties for LottieInteractivity chain
+  private lottieChainInteractionObserver?: IntersectionObserver;
+  private lottieChainInitialized = false;
 
   constructor(
     private store: Store<AppState>,
@@ -415,15 +458,15 @@ export class HomeComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   ngOnInit(): void {
+    gsap.registerPlugin(ScrollTrigger);
     this.loadNearbyStations();
     this.setupScrollAnimations();
-    gsap.registerPlugin(ScrollTrigger); // Register plugin once
   }
 
   ngAfterViewInit(): void {
     if (this.heroVideo && this.heroVideo.nativeElement) {
       this.videoElement = this.heroVideo.nativeElement;
-      this.videoElement.muted = true; // Crucial for autoplay
+      this.videoElement.muted = true; 
 
       this.canPlayListener = () => {
         const playPromise = this.videoElement.play();
@@ -434,7 +477,6 @@ export class HomeComponent implements OnInit, OnDestroy, AfterViewInit {
         }
       };
 
-      // HTMLMediaElement.HAVE_FUTURE_DATA is 3, HAVE_ENOUGH_DATA is 4
       if (this.videoElement.readyState >= 3) {
         const playPromise = this.videoElement.play();
         if (playPromise !== undefined) {
@@ -447,16 +489,16 @@ export class HomeComponent implements OnInit, OnDestroy, AfterViewInit {
       }
     }
     this.setupHowItWorksAnimation();
+    this.initializeLottieChainOnVisible();
   }
 
   ngOnDestroy(): void {
     this.subscriptions.unsubscribe();
     if (this.videoElement && this.canPlayListener) {
-      // Remove listener if component is destroyed before 'canplay' fires
-      // Though { once: true } largely handles this, explicit removal is safer.
       this.videoElement.removeEventListener('canplay', this.canPlayListener);
     }
-    ScrollTrigger.getAll().forEach((trigger: any) => trigger.kill()); // Kill GSAP ScrollTriggers
+    ScrollTrigger.getAll().forEach((trigger: any) => trigger.kill());
+    this.lottieChainInteractionObserver?.disconnect();
   }
 
   private loadNearbyStations(): void {
@@ -480,20 +522,16 @@ export class HomeComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   private setupScrollAnimations(): void {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach(entry => {
-          if (entry.isIntersecting) {
-            // Potentially add more animations here for other sections
-          }
-        });
-      },
-      { threshold: 0.3 } 
-    );
+    const heroSection = document.querySelector('.hero-section') as HTMLElement;
 
-    setTimeout(() => {
-      // Observe other sections as needed
-    }, 100); // Delay to ensure elements are in the DOM
+    if (heroSection) {
+      ScrollTrigger.create({
+        trigger: heroSection,
+        start: 'top top',
+        pin: true,
+        pinSpacing: false,
+      });
+    }
   }
 
   private setupHowItWorksAnimation(): void {
@@ -502,28 +540,68 @@ export class HomeComponent implements OnInit, OnDestroy, AfterViewInit {
     
     if (track && panels.length > 0) {
       const numPanels = panels.length;
-      // Ensure the track is wide enough to hold all panels side-by-side
       gsap.set(track, { width: numPanels * 100 + 'vw' });
 
       gsap.to(track, {
-        xPercent: -100 * (numPanels - 1),
-        ease: "none", // Linear movement for scrub
+        x: () => -(track.offsetWidth - window.innerWidth),
+        ease: "none", 
         scrollTrigger: {
           trigger: ".how-it-works-pinned-viewport",
           pin: true,
-          scrub: 0.5, // Smooth scrubbing
-          // markers: true, // Uncomment for debugging aid
-          start: "top top", // Start pinning and animation when top of viewport hits top of trigger
-          end: () => "+=" + (track.offsetWidth - window.innerWidth), // End after scrolling the full width of the track minus one viewport width
+          scrub: 0.2,
+          start: "top top", 
+          end: () => "+=" + (track.offsetWidth - window.innerWidth), 
           snap: {
-            snapTo: 1 / (numPanels - 1), // Snap to the start of each panel
+            snapTo: 1 / (numPanels - 1), 
             duration: { min: 0.2, max: 0.3 },
             ease: "power1.inOut"
           },
-          invalidateOnRefresh: true // Recalculate ScrollTrigger on window resize
+          invalidateOnRefresh: true 
         }
       });
     }
+  }
+
+  private initializeLottieChainOnVisible(): void {
+    if (!this.lottieContainerLocate || !this.lottieContainerLocate.nativeElement) {
+      console.error('Lottie container not found for chain initialization.');
+      return;
+    }
+    
+    const lottieContainerEl = this.lottieContainerLocate.nativeElement;
+
+    this.lottieChainInteractionObserver = new IntersectionObserver(
+      (entries, observer) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting && !this.lottieChainInitialized) {
+            if (typeof create !== 'undefined') { 
+              create({
+                player: `#${lottieContainerEl.id}`,
+                mode: 'chain',
+                actions: [
+                  {
+                    state: 'autoplay',        
+                    transition: 'onComplete' 
+                  },
+                  {
+                    path: '/how-it-works/locate_idle.json',
+                    state: 'loop',          
+                    transition: 'none'        
+                  }
+                ]
+              } as any);
+              this.lottieChainInitialized = true;
+              observer.unobserve(entry.target); 
+            } else {
+              console.error('LottieInteractivity library is not loaded.');
+            }
+          }
+        });
+      },
+      { threshold: 0.5 }
+    );
+
+    this.lottieChainInteractionObserver.observe(lottieContainerEl);
   }
 
   exploreStations(): void {
