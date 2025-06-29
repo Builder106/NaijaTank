@@ -268,3 +268,13 @@
 .text-hero-black {
   color: #000000; /* Black */
 }
+
+/* Global Keyframes */
+@keyframes fadeInVideo {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}

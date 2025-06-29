@@ -17,13 +17,13 @@ import { logout } from '../../../store/actions/user.actions';
         <div class="flex h-16 items-center justify-between gap-4">
           <!-- Logo -->
           <a routerLink="/" class="flex items-center gap-2">
-            <span class="text-xl font-display font-bold text-primary-500">NaijaTank</span>
+            <span class="font-africa text-xl font-display font-bold text-primary-500">NaijaTank</span>
           </a>
 
           <!-- Navigation Links -->
           <div class="hidden md:flex items-center gap-6">
             <a routerLink="/map" routerLinkActive="nav-link-active" class="nav-link">
-              Find Fuel
+              Map
             </a>
             <a routerLink="/stations" routerLinkActive="nav-link-active" class="nav-link">
               Stations
@@ -94,7 +94,7 @@ import { logout } from '../../../store/actions/user.actions';
           <a routerLink="/map" 
              routerLinkActive="nav-link-active"
              class="block nav-link py-2">
-            Find Fuel
+            Map
           </a>
           <a routerLink="/stations" 
              routerLinkActive="nav-link-active"

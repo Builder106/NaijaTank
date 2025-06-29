@@ -11,7 +11,6 @@ import { GeoService } from '../../core/services/geo.service';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { create } from '@lottiefiles/lottie-interactivity';
-import '@lottiefiles/lottie-player';
 
 @Component({
   selector: 'app-home',
@@ -24,7 +23,7 @@ import '@lottiefiles/lottie-player';
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
   template: `
     <!-- Hero Section with Video Background -->
-    <section class="hero-section relative min-h-screen overflow-hidden">
+    <section class="hero-section sequential-fullscreen-pin relative min-h-screen overflow-hidden">
       <!-- Video Background -->
       <div class="absolute inset-0 z-0">
         <video
@@ -33,7 +32,7 @@ import '@lottiefiles/lottie-player';
           muted 
           loop 
           playsinline
-          class="w-full h-full object-cover">
+          class="w-full h-full object-cover hero-video-fade-in">
           <source src="/landing_page/landing_page.mp4" type="video/mp4">
         </video>
       </div>
@@ -158,6 +157,16 @@ import '@lottiefiles/lottie-player';
             </div>
           </div>
         </article>
+      </div>
+
+      <!-- Scroll Indicator for How it Works -->
+      <div class="scroll-indicator absolute bottom-8 left-1/2 transform -translate-x-1/2 flex flex-col items-center z-20">
+        <div class="scroll-text text-black text-sm font-light tracking-widest uppercase mb-4 opacity-80">
+          Scroll Down
+        </div>
+        <div class="scroll-arrow w-6 h-10 border-2 border-black rounded-full flex justify-center">
+          <div class="scroll-dot w-1 h-3 bg-black rounded-full mt-2 animate-bounce"></div>
+        </div>
       </div>
     </section>
 
@@ -328,6 +337,23 @@ import '@lottiefiles/lottie-player';
       }
     }
 
+    /* Added for video fade-in */
+    .hero-video-fade-in {
+      opacity: 0;
+      animation: fadeInVideo 1s ease-out 0.7s forwards; /* Increased delay to 0.7s */
+    }
+
+    @keyframes fadeInVideo {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
     /* Responsive Design */
     @media (max-width: 768px) {
       .hero-title span:last-child {
@@ -369,6 +395,8 @@ import '@lottiefiles/lottie-player';
       width: 100vw;
       overflow: hidden;
       position: relative;
+      /* opacity: 0; */
+      /* transform: translateY(50px); */
     }
 
     .flag-background {
@@ -376,6 +404,8 @@ import '@lottiefiles/lottie-player';
       inset: 0;
       display: flex;
       z-index: 0; /* Behind the track */
+      /* opacity: 0; */
+      /* transform: scale(0.95); */
     }
     .flag-stripe-green {
       width: 33.3333%;
@@ -394,7 +424,8 @@ import '@lottiefiles/lottie-player';
       position: relative;
       z-index: 1; /* Above the flag */
       will-change: transform; /* Hint for smoother animations */
-      /* Width is set by JS: numPanels * 100vw */
+      /* opacity: 0; */
+      /* transform: translateX(30px); */
     }
 
     .how-it-works-panel {
@@ -405,6 +436,9 @@ import '@lottiefiles/lottie-player';
       align-items: center;
       justify-content: center;
       padding: 2rem; /* Tailwind p-8 */
+      padding-bottom: 6.5rem; /* Slightly increased for scroll indicator clearance */
+      /* opacity: 0; */
+      /* transform: translateY(20px) scale(0.98); */
     }
 
     .panel-content-wrapper {
@@ -418,17 +452,19 @@ import '@lottiefiles/lottie-player';
 
     .panel-content {
       background-color: rgba(255, 255, 255, 0.9); /* Slightly more opaque for readability */
-      padding: 2rem; /* Tailwind p-8, md:p-10 */
+      padding: 2rem 2rem 1.5rem; /* Added a bit more bottom padding */
       border-radius: 0.75rem; /* Tailwind rounded-xl */
       box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04); /* Tailwind shadow-xl */
       max-width: 90vw; /* Responsive max width */
       width: auto; /* Allow content to dictate width up to max-width */
       text-align: center;
+      /* opacity: 0; */
+      /* transform: translateY(20px) scale(0.98); */
     }
 
     @media (min-width: 768px) {
       .panel-content {
-        padding: 2.5rem; /* md:p-10 */
+        padding: 2.5rem 2.5rem 1.5rem; /* Added a bit more bottom padding */
         max-width: 500px; /* Fixed max-width on larger screens */
       }
     }
@@ -443,7 +479,7 @@ export class HomeComponent implements OnInit, OnDestroy, AfterViewInit {
   stations$: Observable<Station[]>;
   private subscriptions = new Subscription();
   private videoElement!: HTMLVideoElement;
-  private canPlayListener!: () => void;
+  private canPlayThroughListener!: () => void;
   
   // Properties for LottieInteractivity chain
   private lottieChainInteractionObserver?: IntersectionObserver;
@@ -460,7 +496,6 @@ export class HomeComponent implements OnInit, OnDestroy, AfterViewInit {
   ngOnInit(): void {
     gsap.registerPlugin(ScrollTrigger);
     this.loadNearbyStations();
-    this.setupScrollAnimations();
   }
 
   ngAfterViewInit(): void {
@@ -468,34 +503,38 @@ export class HomeComponent implements OnInit, OnDestroy, AfterViewInit {
       this.videoElement = this.heroVideo.nativeElement;
       this.videoElement.muted = true; 
 
-      this.canPlayListener = () => {
+      this.canPlayThroughListener = () => {
+        console.log('Video canplaythrough event fired, attempting to play.');
         const playPromise = this.videoElement.play();
         if (playPromise !== undefined) {
           playPromise.catch(error => {
-            console.warn('Hero video autoplay was prevented on canplay:', error);
+            console.warn('Hero video autoplay was prevented on canplaythrough:', error);
           });
         }
       };
 
-      if (this.videoElement.readyState >= 3) {
+      if (this.videoElement.readyState === HTMLMediaElement.HAVE_ENOUGH_DATA) {
+        console.log('Attempting to play video (readyState === HAVE_ENOUGH_DATA)');
         const playPromise = this.videoElement.play();
         if (playPromise !== undefined) {
           playPromise.catch(error => {
-            console.warn('Hero video autoplay was prevented (readyState >= 3):', error);
+            console.warn('Hero video autoplay was prevented (readyState === HAVE_ENOUGH_DATA):', error);
           });
         }
       } else {
-        this.videoElement.addEventListener('canplay', this.canPlayListener, { once: true });
+        console.log('Adding canplaythrough listener for video');
+        this.videoElement.addEventListener('canplaythrough', this.canPlayThroughListener, { once: true });
       }
     }
+    this.setupVerticalPinning();
     this.setupHowItWorksAnimation();
     this.initializeLottieChainOnVisible();
   }
 
   ngOnDestroy(): void {
     this.subscriptions.unsubscribe();
-    if (this.videoElement && this.canPlayListener) {
-      this.videoElement.removeEventListener('canplay', this.canPlayListener);
+    if (this.videoElement && this.canPlayThroughListener) {
+      this.videoElement.removeEventListener('canplaythrough', this.canPlayThroughListener);
     }
     ScrollTrigger.getAll().forEach((trigger: any) => trigger.kill());
     this.lottieChainInteractionObserver?.disconnect();
@@ -521,46 +560,77 @@ export class HomeComponent implements OnInit, OnDestroy, AfterViewInit {
     });
   }
 
-  private setupScrollAnimations(): void {
-    const heroSection = document.querySelector('.hero-section') as HTMLElement;
-
-    if (heroSection) {
+  private setupVerticalPinning(): void {
+    gsap.utils.toArray(".sequential-fullscreen-pin").forEach((section: any) => {
       ScrollTrigger.create({
-        trigger: heroSection,
-        start: 'top top',
+        trigger: section,
+        start: "top top",
         pin: true,
         pinSpacing: false,
+        markers: true, 
+        invalidateOnRefresh: true,
       });
-    }
+    });
   }
 
   private setupHowItWorksAnimation(): void {
-    const track = document.querySelector('.how-it-works-track') as HTMLElement;
-    const panels = gsap.utils.toArray(".how-it-works-panel") as HTMLElement[];
-    
-    if (track && panels.length > 0) {
-      const numPanels = panels.length;
-      gsap.set(track, { width: numPanels * 100 + 'vw' });
+   const howItWorksViewport = document.querySelector('.how-it-works-pinned-viewport') as HTMLElement;
+   const track = document.querySelector('.how-it-works-track') as HTMLElement;
+   const flagBackground = document.querySelector('.flag-background') as HTMLElement;
+   const panels = gsap.utils.toArray(".how-it-works-panel") as HTMLElement[];
 
-      gsap.to(track, {
-        x: () => -(track.offsetWidth - window.innerWidth),
-        ease: "none", 
-        scrollTrigger: {
-          trigger: ".how-it-works-pinned-viewport",
-          pin: true,
-          scrub: 0.2,
-          start: "top top", 
-          end: () => "+=" + (track.offsetWidth - window.innerWidth), 
-          snap: {
-            snapTo: 1 / (numPanels - 1), 
-            duration: { min: 0.2, max: 0.3 },
-            ease: "power1.inOut"
-          },
-          invalidateOnRefresh: true 
-        }
-      });
+   // Force visibility of the section and its key children
+   if (howItWorksViewport) {
+    gsap.set(howItWorksViewport, { autoAlpha: 1, display: 'block' }); 
+
+    if (flagBackground) {
+        gsap.set(flagBackground, { autoAlpha: 1, scale: 1, display: 'flex' });
     }
-  }
+    if (track) {
+        gsap.set(track, { autoAlpha: 1, x: 0, display: 'flex' });
+        
+        if (panels && panels.length > 0) {
+            gsap.set(panels, { autoAlpha: 1, display: 'flex' }); 
+        }
+
+        const panelContentWrappers = gsap.utils.toArray(".panel-content-wrapper") as HTMLElement[];
+        if (panelContentWrappers.length > 0) {
+            gsap.set(panelContentWrappers, { autoAlpha: 1, display: 'flex'}); 
+        }
+
+        const panelContents = gsap.utils.toArray(".panel-content") as HTMLElement[];
+        if (panelContents.length > 0) {
+            gsap.set(panelContents, { autoAlpha: 1, y: 0, scale: 1, display: 'block' }); 
+        }
+    }
+   }
+ 
+   if (track && panels.length > 0) {
+     const numPanels = panels.length;
+     gsap.set(track, { width: numPanels * 100 + 'vw' });
+ 
+     // Horizontal scroll + pin (only after entrance animation)
+     gsap.to(track, {
+       x: () => -(track.offsetWidth - window.innerWidth),
+       ease: "none",
+       scrollTrigger: {
+         trigger: howItWorksViewport,
+         start: "top top",
+         end: () => `+=${track.offsetWidth - window.innerWidth}`,
+         scrub: 0.2,
+         pin: true,
+         pinSpacing: true,
+         snap: {
+           snapTo: 1 / (numPanels - 1),
+           duration: { min: 0.2, max: 0.3 },
+           ease: "power1.inOut"
+         },
+         invalidateOnRefresh: true,
+         markers: true,
+       }
+     });
+   }
+ }
 
   private initializeLottieChainOnVisible(): void {
     if (!this.lottieContainerLocate || !this.lottieContainerLocate.nativeElement) {
