@@ -1,0 +1,224 @@
+<!-- Hero Section with Video Background -->
+<section class="hero-section section relative min-h-screen overflow-hidden">
+  <!-- Video Background -->
+  <div class="absolute inset-0 z-0">
+    <video
+      #heroVideo
+      autoplay 
+      muted 
+      loop 
+      playsinline
+      class="w-full h-full object-cover hero-video-fade-in"
+      [attr.aria-label]="'Background video showing fuel stations in Nigeria'">
+      <source src="/landing_page/landing_page.mp4" type="video/mp4">
+      Your browser does not support the video tag.
+    </video>
+  </div>
+
+  <!-- Hero Content -->
+  <div class="relative z-10 flex flex-col items-center justify-center min-h-screen text-center px-4">
+    <!-- Animated Header Text -->
+    <div class="hero-text-container mb-8">
+      <h1 class="hero-title text-white mb-6">
+        <span class="block text-4xl md:text-5xl lg:text-6xl font-light tracking-wide opacity-90 mb-4">
+          <span class="hero-word font-africa text-hero-black text-outline-white mr-6">Fueling</span>
+          <span class="hero-word font-africa text-outline-black mr-6">
+            <span class="text-block-green">Nig</span><span class="text-block-white">eri</span><span class="text-block-green">a's</span>
+          </span>
+          <span class="hero-word font-africa text-hero-black text-outline-white">Future</span>
+        </span>
+      </h1>
+    </div>
+
+    <!-- CTA Buttons -->
+    <div class="hero-actions flex flex-col sm:flex-row gap-4 mb-12">
+      <button 
+        (click)="exploreStations()"
+        class="cta-primary px-8 py-4 bg-primary-500 hover:bg-primary-600 text-white font-semibold rounded-lg transition-all duration-300 transform hover:scale-105 hover:shadow-xl cursor-pointer"
+        aria-label="Explore nearby fuel stations">
+        Explore Stations
+      </button>
+      <a 
+        routerLink="/auth"
+        class="cta-secondary px-8 py-4 border-2 border-white text-white hover:bg-white hover:text-primary-900 font-semibold rounded-lg transition-all duration-300 transform hover:scale-105"
+        aria-label="Join the NaijaTank community">
+        Join Community
+      </a>
+    </div>
+
+    <!-- Scroll Indicator -->
+    <div class="scroll-indicator absolute bottom-8 left-1/2 transform -translate-x-1/2 flex flex-col items-center">
+      <div class="scroll-text text-white text-sm font-light tracking-widest uppercase mb-4 opacity-80">
+        Scroll Down
+      </div>
+      <div class="scroll-arrow w-6 h-10 border-2 border-white rounded-full flex justify-center" 
+           aria-label="Scroll down for more content">
+        <div class="scroll-dot w-1 h-3 bg-white rounded-full mt-2 animate-bounce"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- How it Works Section-->
+<!-- Pinned Viewport for Horizontal Scroll -->
+<section class="how-it-works-pinned-viewport section">
+  <!-- Nigerian Flag Background -->
+  <div class="flag-background" aria-hidden="true">
+    <div class="flag-stripe-green"></div>
+    <div class="flag-stripe-white"></div>
+    <div class="flag-stripe-green"></div>
+  </div>
+
+  <!-- Horizontal Track containing panels -->
+  <div class="how-it-works-track">
+    <article class="how-it-works-panel">
+      <div class="panel-content-wrapper">
+        <div class="panel-content">
+          <h2 class="text-4xl md:text-5xl lg:text-6xl font-africa text-primary-900 mb-6 text-outline-white">
+            How it Works
+          </h2>
+          <p class="text-lg text-gray-700">
+            Follow these simple steps to make the most of NaijaTank.
+          </p>
+        </div>
+      </div>
+    </article>
+
+    <article class="how-it-works-panel">
+      <div class="panel-content-wrapper">
+        <div class="panel-content">
+          <div class="flex flex-col items-center w-full">
+            <lottie-player 
+              #lottieContainerLocate 
+              id="locateLottiePanelAnimation" 
+              src="/how-it-works/locate_entrance.json"
+              class="w-full h-auto mb-4 transition-opacity duration-300"
+              aria-label="Animation showing how to locate fuel stations">
+            </lottie-player>
+            <div class="text-4xl md:text-5xl font-bold text-primary-500 mb-2 opacity-50" aria-hidden="true">1</div>
+            <h3 class="font-africa text-2xl md:text-3xl mb-4 text-center">Locate</h3>
+          </div>
+        </div>
+      </div>
+    </article>
+
+    <article class="how-it-works-panel">
+      <div class="panel-content-wrapper">
+        <div class="panel-content">
+          <div class="flex flex-col items-center w-full">
+            <lottie-player 
+              #lottieContainerReport
+              id="reportLottiePanelAnimation" 
+              src="/how-it-works/report.json"
+              class="w-full h-auto mb-4 transition-opacity duration-300"
+              autoplay
+              loop
+              aria-label="Animation showing how to report fuel status">
+            </lottie-player>
+            <div class="text-4xl md:text-5xl font-bold text-primary-500 mb-2 opacity-50" aria-hidden="true">2</div>
+            <h3 class="text-2xl font-africa md:text-3xl font-bold text-primary-900 mb-4 text-center">Report</h3>
+          </div>
+        </div>
+      </div>
+    </article>
+
+    <article class="how-it-works-panel">
+      <div class="panel-content-wrapper">
+        <div class="panel-content">
+          <div class="flex flex-col items-center w-full">
+            <lottie-player 
+              #lottieContainerShare
+              id="shareLottiePanelAnimation" 
+              src="/how-it-works/share.json"
+              class="w-full h-auto mb-4 transition-opacity duration-300"
+              autoplay
+              loop
+              aria-label="Animation showing how to share fuel information">
+            </lottie-player>
+            <div class="text-4xl md:text-5xl font-bold text-primary-500 mb-2 opacity-50" aria-hidden="true">3</div>
+            <h3 class="text-2xl font-africa md:text-3xl font-bold text-primary-900 mb-4 text-center">Share</h3>
+          </div>
+        </div>
+      </div>
+    </article>
+  </div>
+
+  <!-- Scroll Indicator for How it Works -->
+  <div class="scroll-indicator absolute bottom-8 left-1/2 transform -translate-x-1/2 flex flex-col items-center z-20">
+    <div class="scroll-text text-black text-sm font-light tracking-widest uppercase mb-4 opacity-80">
+      Scroll Down
+    </div>
+    <div class="scroll-arrow w-6 h-10 border-2 border-black rounded-full flex justify-center"
+         aria-label="Scroll down for more content">
+      <div class="scroll-dot w-1 h-3 bg-black rounded-full mt-2 animate-bounce"></div>
+    </div>
+  </div>
+</section>
+
+<!-- Nearby Stations Section -->
+<section class="nearby-stations-section section py-20 bg-white" *ngIf="stations$ | async as stations">
+  <div class="container mx-auto px-4" *ngIf="stations.length > 0">
+    <div class="text-center mb-16">
+      <h2 class="text-4xl md:text-5xl font-bold text-primary-900 mb-6">
+        Stations Near You
+      </h2>
+      <p class="text-xl text-gray-600 max-w-3xl mx-auto">
+        Discover fuel stations in your area with real-time availability and community insights.
+      </p>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+      <app-enhanced-station-card 
+        *ngFor="let station of stations | slice:0:6; trackBy: trackByStation" 
+        [station]="station"
+        (viewDetails)="onStationSelected($event)">
+      </app-enhanced-station-card>
+    </div>
+
+    <div class="text-center">
+      <a 
+        routerLink="/stations" 
+        class="inline-flex items-center px-8 py-4 bg-primary-500 hover:bg-primary-600 text-white font-semibold rounded-lg transition-all duration-300 transform hover:scale-105 hover:shadow-xl"
+        aria-label="View all available fuel stations">
+        View All Stations
+        <svg class="w-5 h-5 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+        </svg>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- CTA Section -->
+<section class="cta-section section py-20 bg-gradient-to-r from-primary-600 via-primary-700 to-primary-800 relative overflow-hidden">
+  <!-- African Pattern Overlay -->
+  <div class="absolute inset-0 opacity-10" aria-hidden="true">
+    <div class="african-pattern w-full h-full"></div>
+  </div>
+  
+  <div class="container mx-auto px-4 relative z-10">
+    <div class="text-center">
+      <h2 class="text-4xl md:text-6xl font-bold text-white mb-6">
+        Join the Movement
+      </h2>
+      <p class="text-xl md:text-2xl text-white opacity-90 max-w-3xl mx-auto mb-12 leading-relaxed">
+        Be part of Nigeria's largest fuel intelligence community. Together, we're making fuel discovery smarter, faster, and more reliable.
+      </p>
+      
+      <div class="flex flex-col sm:flex-row gap-4 justify-center">
+        <a 
+          routerLink="/auth" 
+          class="px-10 py-5 bg-yellow-400 hover:bg-yellow-500 text-primary-900 font-bold text-lg rounded-lg transition-all duration-300 transform hover:scale-105 hover:shadow-xl"
+          aria-label="Sign up for free account">
+          Get Started Free
+        </a>
+        <a 
+          routerLink="/map" 
+          class="px-10 py-5 border-2 border-white text-white hover:bg-white hover:text-primary-900 font-bold text-lg rounded-lg transition-all duration-300 transform hover:scale-105"
+          aria-label="Explore stations on interactive map">
+          Explore Map
+        </a>
+      </div>
+    </div>
+  </div>
+</section> 
