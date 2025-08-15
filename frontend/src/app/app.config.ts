@@ -1,13 +1,14 @@
 import { ApplicationConfig, isDevMode, provideExperimentalZonelessChangeDetection} from '@angular/core';
-import { provideRouter } from '@angular/router';
+import { provideRouter, withInMemoryScrolling } from '@angular/router';
 import { provideHttpClient } from '@angular/common/http';
-import { provideClientHydration } from '@angular/platform-browser';
 import { TranslateLoader, TranslateModule } from '@ngx-translate/core';
 import { TranslateHttpLoader } from '@ngx-translate/http-loader';
 import { HttpClient } from '@angular/common/http';
 import { provideStore } from '@ngrx/store';
 import { provideEffects } from '@ngrx/effects';
 import { provideStoreDevtools } from '@ngrx/store-devtools';
+import { provideLottieOptions } from 'ngx-lottie';
+import { LottieComponent } from 'ngx-lottie';
 
 import { routes } from './app.routes';
 import { reducers, metaReducers } from './store';
@@ -23,12 +24,18 @@ export function HttpLoaderFactory(http: HttpClient) {
 export const appConfig: ApplicationConfig = {
   providers: [
     provideExperimentalZonelessChangeDetection(),
-    provideRouter(routes),
+    provideRouter(routes, withInMemoryScrolling({
+      scrollPositionRestoration: 'disabled',
+      anchorScrolling: 'disabled'
+    })),
     provideHttpClient(),
-    provideClientHydration(),
     provideStore(reducers, { metaReducers }),
     provideEffects([StationEffects, UserEffects, GeolocationEffects]),
     provideStoreDevtools({ maxAge: 25, logOnly: !isDevMode() }),
+    provideLottieOptions({
+      player: () => import('lottie-web'),
+    }),
+    LottieComponent,
     ...TranslateModule.forRoot({
       loader: {
         provide: TranslateLoader,

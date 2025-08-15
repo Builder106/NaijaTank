@@ -13,85 +13,26 @@
         to { opacity: 0; }
       }
       .fade-out-loader {
-        animation: fadeOut 0.5s ease-out forwards; /* Adjust duration as needed */
+        animation: fadeOut 0.5s ease-out forwards;
       }
     </style>
   </head>
   <body style="display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; background-color: #ffffff;">
     <app-root>
-      <lottie-player
-        id="appLoaderAnimation"
-        src="logos/logo_entrance.json"
-        background="transparent"
-        speed="1"
-        style="width: 300px; height: 300px;"
-        autoplay>
-      </lottie-player>
+      <div style="text-align: center;">
+        <lottie-player
+          id="appLoaderAnimation"
+          src="logos/logo_entrance.json"
+          background="transparent"
+          speed="1"
+          style="width: 300px; height: 300px;"
+          autoplay>
+        </lottie-player>
+        <p>Made with ❤️ by Olayinka Vaughan</p>
+      </div>
     </app-root>
     <script>
       const appRootElement = document.querySelector('app-root');
-      const lottiePlayer = document.getElementById('appLoaderAnimation');
-      let angularBootstrapped = false;
-      const BOOTSTRAP_TIMEOUT_MS = 7000; // 7 seconds
-      const FADE_OUT_DURATION_MS = 500; // Must match CSS animation duration
-      let bootstrapTimer = null;
-
-      function finalBootstrap() {
-        if (!angularBootstrapped) {
-          angularBootstrapped = true;
-          // Ensure app-root is visible before Angular takes over
-          if (appRootElement) {
-            appRootElement.classList.remove('fade-out-loader');
-            appRootElement.style.opacity = '1';
-            appRootElement.style.display = ''; // Revert any display:none
-          }
-
-          if (window.bootstrapNaijaTankApp) {
-            console.log('Bootstrapping Angular app...');
-            window.bootstrapNaijaTankApp();
-          } else {
-            console.error('Angular bootstrap function not found. App cannot start.');
-            if (appRootElement) {
-              appRootElement.innerHTML = '<p style="color: red; text-align: center;">Error: Could not load the application.</p>';
-            }
-          }
-        }
-      }
-
-      function handleLottieComplete() {
-        clearTimeout(bootstrapTimer); // Clear safety timeout
-        console.log('Lottie animation completed.');
-        if (appRootElement) {
-          appRootElement.classList.add('fade-out-loader');
-          // Wait for fade-out animation to finish (matches CSS duration), then bootstrap
-          setTimeout(finalBootstrap, FADE_OUT_DURATION_MS); 
-        } else {
-          finalBootstrap(); 
-        }
-      }
-
-      function handleLottieErrorOrTimeout(reason) {
-        clearTimeout(bootstrapTimer); // Clear safety timeout
-        console.warn(`Lottie animation ${reason}. Bootstrapping directly.`);
-        if (appRootElement) {
-            appRootElement.style.display = ''; 
-            appRootElement.style.opacity = '1';
-            appRootElement.classList.remove('fade-out-loader'); // Ensure no fade class
-            if(lottiePlayer) lottiePlayer.style.display = 'none'; // Hide broken lottie
-        }
-        finalBootstrap();
-      }
-
-      if (lottiePlayer && appRootElement) {
-        lottiePlayer.addEventListener('complete', handleLottieComplete);
-        lottiePlayer.addEventListener('error', () => handleLottieErrorOrTimeout('error'));
-        
-        bootstrapTimer = setTimeout(() => handleLottieErrorOrTimeout('timeout'), BOOTSTRAP_TIMEOUT_MS);
-
-      } else {
-        console.error('Lottie player or app-root element not found. Bootstrapping Angular app immediately.');
-        finalBootstrap(); 
-      }
     </script>
   </body>
 </html>
