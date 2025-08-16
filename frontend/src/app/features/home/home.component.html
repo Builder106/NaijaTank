@@ -1,0 +1,310 @@
+<!-- Hero Section with Video Background -->
+<section class="hero-section section relative min-h-screen overflow-hidden">
+  <!-- Video Background -->
+  <div class="absolute inset-0 z-0">
+    <video
+      #heroVideo
+      autoplay 
+      muted 
+      loop 
+      playsinline
+      class="w-full h-full object-cover hero-video-fade-in"
+      [attr.aria-label]="'Background video showing fuel stations in Nigeria'">
+      <source src="https://res.cloudinary.com/dhc3kh8qk/video/upload/v1755377934/landing_page_cqmjrz.mp4" type="video/mp4">
+      Your browser does not support the video tag.
+    </video>
+  </div>
+
+  <!-- Hero Content -->
+  <div class="relative z-10 flex flex-col items-center justify-center min-h-screen text-center px-4">
+    <!-- Animated Header Text -->
+    <div class="hero-text-container mb-8">
+      <h1 class="hero-title text-white mb-6">
+        <span class="block text-4xl md:text-5xl lg:text-6xl font-light tracking-wide opacity-90 mb-4">
+          <span class="hero-word font-africa text-hero-black text-outline-white mr-6">Fueling</span>
+          <span class="hero-word font-africa text-outline-black mr-6">
+            <span class="text-block-green">Nig</span><span class="text-block-white">eri</span><span class="text-block-green">a's</span>
+          </span>
+          <span class="hero-word font-africa text-hero-black text-outline-white">Future</span>
+        </span>
+      </h1>
+    </div>
+
+    <!-- Quick Search Section -->
+    <div class="hero-search-section mb-8 w-full max-w-md">
+      <div class="relative">
+        <input 
+          type="text" 
+          [(ngModel)]="searchQuery"
+          (input)="onSearchInput($event)"
+          placeholder="Search nearby stations..."
+          class="w-full px-4 py-3 pl-12 pr-10 bg-white/90 backdrop-blur-sm border border-white/20 rounded-lg text-gray-800 placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white transition-all duration-200"
+          aria-label="Search for fuel stations">
+        <svg class="absolute left-4 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-600" 
+             fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+        </svg>
+        <button *ngIf="searchQuery" 
+                (click)="clearSearch()"
+                class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-600 hover:text-gray-800 transition-colors"
+                aria-label="Clear search">
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- CTA Buttons -->
+    <div class="hero-actions flex flex-col sm:flex-row gap-4 mb-12">
+      <button 
+        (click)="exploreStations()"
+        class="cta-primary px-8 py-4 bg-primary-500 hover:bg-primary-600 text-white font-semibold rounded-lg transition-all duration-300 transform hover:scale-105 hover:shadow-xl cursor-pointer"
+        aria-label="Explore nearby fuel stations">
+        Explore Stations
+      </button>
+      <a 
+        routerLink="/auth"
+        class="cta-secondary px-8 py-4 border-2 border-white text-white hover:bg-white hover:text-primary-900 font-semibold rounded-lg transition-all duration-300 transform hover:scale-105"
+        aria-label="Join the NaijaTank community">
+        Join Community
+      </a>
+    </div>
+
+    <!-- Scroll Indicator -->
+    <div class="scroll-indicator absolute bottom-8 left-1/2 transform -translate-x-1/2 flex flex-col items-center">
+      <div class="scroll-text text-white text-sm font-light tracking-widest uppercase mb-4 opacity-80">
+        Scroll Down
+      </div>
+      <div class="scroll-arrow w-6 h-10 border-2 border-white rounded-full flex justify-center" 
+           aria-label="Scroll down for more content">
+        <div class="scroll-dot w-1 h-3 bg-white rounded-full mt-2 animate-bounce"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- How it Works Section-->
+<!-- Pinned Viewport for Horizontal Scroll -->
+<section class="how-it-works-pinned-viewport section">
+  <!-- Nigerian Flag Background -->
+  <div class="flag-background" aria-hidden="true">
+    <div class="flag-stripe-green"></div>
+    <div class="flag-stripe-white"></div>
+    <div class="flag-stripe-green"></div>
+  </div>
+
+  <!-- Horizontal Track containing panels -->
+  <div class="how-it-works-track">
+    <article class="how-it-works-panel">
+      <div class="panel-content-wrapper">
+        <div class="panel-content">
+          <h2 class="text-4xl md:text-5xl lg:text-6xl font-africa text-primary-900 mb-6 text-outline-white">
+            How it Works
+          </h2>
+          <p class="text-lg text-gray-700">
+            Follow these simple steps to make the most of NaijaTank.
+          </p>
+        </div>
+      </div>
+    </article>
+
+    <article class="how-it-works-panel">
+      <div class="panel-content-wrapper">
+        <div class="panel-content">
+          <div class="flex flex-col items-center w-full">
+            <lottie-player 
+              #lottieContainerLocate 
+              id="locateLottiePanelAnimation" 
+              src="/how-it-works/locate_entrance.json"
+              class="w-full h-auto mb-4 transition-opacity duration-300"
+              aria-label="Animation showing how to locate fuel stations">
+            </lottie-player>
+            <div class="text-4xl md:text-5xl font-bold text-primary-500 mb-2 opacity-50" aria-hidden="true">1</div>
+            <h3 class="font-africa text-2xl md:text-3xl mb-4 text-center">Locate</h3>
+          </div>
+        </div>
+      </div>
+    </article>
+
+    <article class="how-it-works-panel">
+      <div class="panel-content-wrapper">
+        <div class="panel-content">
+          <div class="flex flex-col items-center w-full">
+            <lottie-player 
+              #lottieContainerReport
+              id="reportLottiePanelAnimation" 
+              src="/how-it-works/report.json"
+              class="w-full h-auto mb-4 transition-opacity duration-300"
+              autoplay
+              loop
+              aria-label="Animation showing how to report fuel status">
+            </lottie-player>
+            <div class="text-4xl md:text-5xl font-bold text-primary-500 mb-2 opacity-50" aria-hidden="true">2</div>
+            <h3 class="text-2xl font-africa md:text-3xl font-bold text-primary-900 mb-4 text-center">Report</h3>
+          </div>
+        </div>
+      </div>
+    </article>
+
+    <article class="how-it-works-panel">
+      <div class="panel-content-wrapper">
+        <div class="panel-content">
+          <div class="flex flex-col items-center w-full">
+            <lottie-player 
+              #lottieContainerShare
+              id="shareLottiePanelAnimation" 
+              src="/how-it-works/share.json"
+              class="w-full h-auto mb-4 transition-opacity duration-300"
+              autoplay
+              loop
+              aria-label="Animation showing how to share fuel information">
+            </lottie-player>
+            <div class="text-4xl md:text-5xl font-bold text-primary-500 mb-2 opacity-50" aria-hidden="true">3</div>
+            <h3 class="text-2xl font-africa md:text-3xl font-bold text-primary-900 mb-4 text-center">Share</h3>
+          </div>
+        </div>
+      </div>
+    </article>
+  </div>
+
+  <!-- Scroll Indicator for How it Works -->
+  <div class="scroll-indicator absolute bottom-8 left-1/2 transform -translate-x-1/2 flex flex-col items-center z-20">
+    <div class="scroll-text text-black text-sm font-light tracking-widest uppercase mb-4 opacity-80">
+      Scroll Down
+    </div>
+    <div class="scroll-arrow w-6 h-10 border-2 border-black rounded-full flex justify-center"
+         aria-label="Scroll down for more content">
+      <div class="scroll-dot w-1 h-3 bg-black rounded-full mt-2 animate-bounce"></div>
+    </div>
+  </div>
+</section>
+
+<!-- Nearby Stations Section -->
+<section class="nearby-stations-section section py-20 bg-white">
+  <div class="container mx-auto px-4">
+    <div class="text-center mb-16">
+      <h2 class="text-4xl md:text-5xl font-bold text-primary-900 mb-6">
+        <span *ngIf="!searchQuery">Stations Near You</span>
+        <span *ngIf="searchQuery">Search Results</span>
+      </h2>
+      <p class="text-xl text-gray-600 max-w-3xl mx-auto">
+        <span *ngIf="!searchQuery">Discover fuel stations in your area with real-time availability and community insights.</span>
+        <span *ngIf="searchQuery">Found stations matching "{{ searchQuery }}"</span>
+      </p>
+    </div>
+
+    <!-- Loading State -->
+    <div *ngIf="loading$ | async" class="flex justify-center py-12">
+      <app-loader></app-loader>
+      <div class="ml-4 text-gray-600">Loading nearby stations...</div>
+    </div>
+
+    <!-- Error State -->
+    <div *ngIf="error$ | async as error" class="text-center py-12">
+      <div class="bg-red-50 border border-red-200 rounded-lg p-6 max-w-md mx-auto">
+        <svg class="w-12 h-12 mx-auto text-red-500 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"/>
+        </svg>
+        <h3 class="text-lg font-semibold text-red-800 mb-2">Failed to Load Stations</h3>
+        <p class="text-red-600 text-sm mb-4">{{ error.message || 'Unable to fetch station data' }}</p>
+        <button 
+          (click)="loadNearbyStations()"
+          class="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors duration-200">
+          Try Again
+        </button>
+      </div>
+    </div>
+
+    <!-- Stations Content -->
+    <ng-container *ngIf="!(loading$ | async) && !(error$ | async)">
+      <!-- No Results State -->
+      <div *ngIf="(filteredStations$ | async)?.length === 0" class="text-center py-12">
+        <div class="bg-gray-50 rounded-lg p-8 max-w-md mx-auto">
+          <svg class="w-16 h-16 mx-auto text-gray-400 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+          </svg>
+          <h3 class="text-xl font-semibold text-gray-800 mb-2">
+            <span *ngIf="!searchQuery">No Stations Found</span>
+            <span *ngIf="searchQuery">No Results Found</span>
+          </h3>
+          <p class="text-gray-600 mb-4">
+            <span *ngIf="!searchQuery">No stations found in your current area.</span>
+            <span *ngIf="searchQuery">Try adjusting your search terms or clear the search to see all stations.</span>
+          </p>
+          <button 
+            *ngIf="searchQuery"
+            (click)="clearSearch()"
+            class="px-6 py-3 bg-primary-500 hover:bg-primary-600 text-white rounded-lg transition-colors duration-200">
+            Clear Search
+          </button>
+          <a 
+            *ngIf="!searchQuery"
+            routerLink="/stations" 
+            class="inline-block px-6 py-3 bg-primary-500 hover:bg-primary-600 text-white rounded-lg transition-colors duration-200">
+            View All Stations
+          </a>
+        </div>
+      </div>
+
+      <!-- Stations Grid -->
+      <div *ngIf="(filteredStations$ | async) && (filteredStations$ | async)!.length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+        <app-enhanced-station-card 
+          *ngFor="let station of filteredStations$ | async; trackBy: trackByStation" 
+          [station]="station"
+          (viewDetails)="onStationSelected($event)">
+        </app-enhanced-station-card>
+      </div>
+
+      <!-- View All Stations Link -->
+      <div *ngIf="(filteredStations$ | async) && (filteredStations$ | async)!.length > 0" class="text-center">
+        <a 
+          routerLink="/stations" 
+          class="inline-flex items-center px-8 py-4 bg-primary-500 hover:bg-primary-600 text-white font-semibold rounded-lg transition-all duration-300 transform hover:scale-105 hover:shadow-xl"
+          aria-label="View all available fuel stations">
+          View All Stations
+          <svg class="w-5 h-5 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+          </svg>
+        </a>
+      </div>
+    </ng-container>
+  </div>
+</section>
+
+
+
+<!-- CTA Section -->
+<section class="cta-section section py-20 bg-gradient-to-r from-primary-600 via-primary-700 to-primary-800 relative overflow-hidden">
+  <!-- African Pattern Overlay -->
+  <div class="absolute inset-0 opacity-10" aria-hidden="true">
+    <div class="african-pattern w-full h-full"></div>
+  </div>
+  
+  <div class="container mx-auto px-4 relative z-10">
+    <div class="text-center">
+      <h2 class="text-4xl md:text-6xl font-bold text-white mb-6">
+        Join the Movement
+      </h2>
+      <p class="text-xl md:text-2xl text-white opacity-90 max-w-3xl mx-auto mb-12 leading-relaxed">
+        Be part of Nigeria's largest fuel intelligence community. Together, we're making fuel discovery smarter, faster, and more reliable.
+      </p>
+      
+      <div class="flex flex-col sm:flex-row gap-4 justify-center">
+        <a 
+          routerLink="/auth" 
+          class="px-10 py-5 bg-yellow-400 hover:bg-yellow-500 text-primary-900 font-bold text-lg rounded-lg transition-all duration-300 transform hover:scale-105 hover:shadow-xl"
+          aria-label="Sign up for free account">
+          Get Started Free
+        </a>
+        <a 
+          routerLink="/map" 
+          class="px-10 py-5 border-2 border-white text-white hover:bg-white hover:text-primary-900 font-bold text-lg rounded-lg transition-all duration-300 transform hover:scale-105"
+          aria-label="Explore stations on interactive map">
+          Explore Map
+        </a>
+      </div>
+    </div>
+  </div>
+</section> 
