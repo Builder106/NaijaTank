@@ -86,6 +86,8 @@ export class HomeComponent implements OnInit, OnDestroy, AfterViewInit {
   private destroy$ = new Subject<void>();
   private videoElement!: HTMLVideoElement;
   private canPlayThroughListener!: () => void;
+  private videoReadyPromise!: Promise<void>;
+  private resolveVideoReady!: () => void;
   
   // Properties for LottieInteractivity chain
   private lottieChainInteractionObserver?: IntersectionObserver;
@@ -130,6 +132,11 @@ export class HomeComponent implements OnInit, OnDestroy, AfterViewInit {
     // SOLUTION 7: More aggressive scroll position reset
     this.ensurePageStartsAtTop();
     
+    // Initialize the video ready promise
+    this.videoReadyPromise = new Promise<void>((resolve) => {
+      this.resolveVideoReady = resolve;
+    });
+    
     gsap.registerPlugin(ScrollTrigger);
     this.loadNearbyStations();
     
@@ -140,7 +147,7 @@ export class HomeComponent implements OnInit, OnDestroy, AfterViewInit {
     }
   }
 
-  ngAfterViewInit(): void {
+  async ngAfterViewInit(): Promise<void> {
     // Validate critical DOM elements exist
     const heroSection = document.querySelector('.hero-section');
     const howItWorksSection = document.querySelector('.how-it-works-pinned-viewport');
@@ -156,13 +163,14 @@ export class HomeComponent implements OnInit, OnDestroy, AfterViewInit {
     try {
       this.initializeVideoPlayer();
       
-      // SOLUTION 6: Use sequential RAF calls for better timing control
+      // Wait for video to be ready before proceeding with animations
+      await this.videoReadyPromise;
+      
+      // Ensure we're at the top after video is ready
+      this.ensurePageStartsAtTop();
+      
+      // SOLUTION 6: Use sequential RAF calls for better timing control after video is ready
       this.animationRAF = requestAnimationFrame(() => {
-        // Ensure we're still at the top after video initialization
-        if (window.scrollY !== 0) {
-          window.scrollTo(0, 0);
-        }
-        
         // Wait another frame to ensure DOM is stable
         requestAnimationFrame(() => {
           this.setupHowItWorksAnimation();
@@ -188,12 +196,17 @@ export class HomeComponent implements OnInit, OnDestroy, AfterViewInit {
       this.videoElement = this.heroVideo.nativeElement;
       this.videoElement.muted = true;
       
-      // Optimized video loading with error handling
+      // Enhanced video loading with promise resolution
       this.videoElement.addEventListener('error', (error) => {
         console.error('Video loading error:', error);
+        // Resolve the promise even on error to prevent blocking
+        this.resolveVideoReady();
       });
 
       this.canPlayThroughListener = () => {
+        // Resolve the video ready promise when video can play through
+        this.resolveVideoReady();
+        
         const playPromise = this.videoElement.play();
         if (playPromise !== undefined) {
           playPromise.catch(error => {
@@ -206,12 +219,24 @@ export class HomeComponent implements OnInit, OnDestroy, AfterViewInit {
       };
 
       if (this.videoElement.readyState === HTMLMediaElement.HAVE_ENOUGH_DATA) {
+        // Video is already ready, resolve immediately
+        this.resolveVideoReady();
         this.videoElement.play().catch(() => {}); // Silent fail for autoplay
       } else {
         this.videoElement.addEventListener('canplaythrough', this.canPlayThroughListener, { once: true });
+        
+        // Fallback timeout to prevent indefinite waiting
+        setTimeout(() => {
+          if (this.resolveVideoReady) {
+            console.warn('Video ready timeout reached, proceeding with animations');
+            this.resolveVideoReady();
+          }
+        }, 3000); // 3 second timeout
       }
     } catch (error) {
       console.error('Error initializing video player:', error);
+      // Resolve the promise on error to prevent blocking
+      this.resolveVideoReady();
     }
   }
 
@@ -273,7 +298,8 @@ export class HomeComponent implements OnInit, OnDestroy, AfterViewInit {
       // SOLUTION 1: Ensure we're at the top before creating ScrollTrigger
       const currentScrollY = window.scrollY;
       if (currentScrollY !== 0) {
-        window.scrollTo(0, 0);
+        console.warn('Page not at top during animation setup, forcing scroll reset');
+        this.ensurePageStartsAtTop();
       }
       
       // SOLUTION 2: Disable ScrollTrigger during setup to prevent jumps
@@ -321,10 +347,8 @@ export class HomeComponent implements OnInit, OnDestroy, AfterViewInit {
 
       // SOLUTION 4: Re-enable ScrollTrigger and ensure proper positioning
       requestAnimationFrame(() => {
-        // Force scroll to top one more time
-        if (window.scrollY !== 0) {
-          window.scrollTo(0, 0);
-        }
+        // Final scroll position check
+        this.ensurePageStartsAtTop();
         
         // Refresh ScrollTrigger calculations from the top position
         ScrollTrigger.refresh();
@@ -335,7 +359,8 @@ export class HomeComponent implements OnInit, OnDestroy, AfterViewInit {
         // Final safety check - ensure we're still at top
         setTimeout(() => {
           if (window.scrollY !== 0) {
-            window.scrollTo({ top: 0, behavior: 'auto' });
+            console.warn('Final scroll check failed, applying emergency reset');
+            this.ensurePageStartsAtTop();
           }
         }, 100);
       });
@@ -488,7 +513,7 @@ export class HomeComponent implements OnInit, OnDestroy, AfterViewInit {
     setTimeout(() => {
       if (window.scrollY !== 0) {
         window.scrollTo({ top: 0, behavior: 'auto' });
-        console.warn('Had to force scroll reset after delay');
+        console.warn('Had to force scroll reset after delay - this may indicate a timing issue');
       }
     }, 50);
   }
