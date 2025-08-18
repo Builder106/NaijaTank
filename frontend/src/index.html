@@ -32,7 +32,32 @@
       </div>
     </app-root>
     <script>
-      const appRootElement = document.querySelector('app-root');
+      (function() {
+        const player = document.getElementById('appLoaderAnimation');
+        function startApp() {
+          const bootstrapFn = (window).bootstrapNaijaTankApp;
+          if (typeof bootstrapFn === 'function') {
+            bootstrapFn();
+          } else {
+            setTimeout(startApp, 50);
+          }
+        }
+        if (player) {
+          player.addEventListener('complete', () => {
+            const container = player.parentElement;
+            if (container) {
+              container.classList.add('fade-out-loader');
+              setTimeout(() => startApp(), 450);
+            } else {
+              startApp();
+            }
+          });
+          // Fallback in case the animation fails to emit 'complete'
+          setTimeout(startApp, 5000);
+        } else {
+          startApp();
+        }
+      })();
     </script>
   </body>
 </html>
