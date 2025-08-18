@@ -25,7 +25,8 @@ export const appConfig: ApplicationConfig = {
   providers: [
     provideExperimentalZonelessChangeDetection(),
     provideRouter(routes, withInMemoryScrolling({
-      scrollPositionRestoration: 'disabled',
+      // Ensure every navigation lands at the top of the page
+      scrollPositionRestoration: 'top',
       anchorScrolling: 'disabled'
     })),
     provideHttpClient(),

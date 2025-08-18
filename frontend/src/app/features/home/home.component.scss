@@ -1,6 +1,6 @@
 /* Section Pinning Styles */
 .section {
-  height: 100vh;
+  min-height: 100vh;
   position: relative;
 }
 
@@ -8,8 +8,8 @@
 :host {
   display: block;
   position: relative;
-  /* Prevent any layout shifts during component initialization */
-  contain: layout style;
+  /* Avoid CSS contain from isolating layout/scroll calculations */
+  contain: none;
 }
 
 /* Ensure body and html don't interfere with scroll positioning */
@@ -379,7 +379,7 @@
   width: 100vw;
   overflow: hidden;
   position: relative;
-  z-index: 10; /* Reduced z-index to prevent scroll interference */
+  z-index: 1; /* Keep below following sections to avoid overlay */
 }
 
 .flag-background {
@@ -444,3 +444,10 @@
     max-width: 500px; /* Fixed max-width on larger screens */
   }
 } 
+
+/* Ensure stations section sits above any pinned content */
+.nearby-stations-section {
+  position: relative;
+  z-index: 5;
+  background: #ffffff;
+}

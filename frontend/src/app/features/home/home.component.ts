@@ -33,6 +33,10 @@ const ANIMATION_CONFIG = {
   THROTTLE_LOGGING: 200 // Reduced logging frequency
 } as const;
 
+// Temporary flag to fully disable the "How it Works" animation setup
+const ENABLE_HOW_IT_WORKS_ANIMATION = true;
+const DISABLE_SCROLL_FIXES = false;
+
 // Type interfaces for better type safety
 interface GSAPTrigger {
   kill(): void;
@@ -129,8 +133,9 @@ export class HomeComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   ngOnInit(): void {
-    // SOLUTION 7: More aggressive scroll position reset
-    this.ensurePageStartsAtTop();
+    if (!DISABLE_SCROLL_FIXES) {
+      this.ensurePageStartsAtTop();
+    }
     
     // Initialize the video ready promise
     this.videoReadyPromise = new Promise<void>((resolve) => {
@@ -148,6 +153,8 @@ export class HomeComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   async ngAfterViewInit(): Promise<void> {
+    // Hard-reset any previous GSAP pin/scroll artifacts that could offset the page
+    this.removeGsapPinArtifacts();
     // Validate critical DOM elements exist
     const heroSection = document.querySelector('.hero-section');
     const howItWorksSection = document.querySelector('.how-it-works-pinned-viewport');
@@ -157,8 +164,9 @@ export class HomeComponent implements OnInit, OnDestroy, AfterViewInit {
       return;
     }
     
-    // SOLUTION 5: Ensure we start at the top before any animations
-    window.scrollTo(0, 0);
+    if (!DISABLE_SCROLL_FIXES) {
+      window.scrollTo(0, 0);
+    }
     
     try {
       this.initializeVideoPlayer();
@@ -166,23 +174,51 @@ export class HomeComponent implements OnInit, OnDestroy, AfterViewInit {
       // Wait for video to be ready before proceeding with animations
       await this.videoReadyPromise;
       
-      // Ensure we're at the top after video is ready
-      this.ensurePageStartsAtTop();
+      if (!DISABLE_SCROLL_FIXES) {
+        this.ensurePageStartsAtTop();
+      }
       
       // SOLUTION 6: Use sequential RAF calls for better timing control after video is ready
       this.animationRAF = requestAnimationFrame(() => {
         // Wait another frame to ensure DOM is stable
         requestAnimationFrame(() => {
-          this.setupHowItWorksAnimation();
-          
-          // Initialize Lottie after ScrollTrigger is properly set up
-          requestAnimationFrame(() => {
-            this.initializeLottieChainOnVisible();
-          });
+          if (ENABLE_HOW_IT_WORKS_ANIMATION) {
+            this.setupHowItWorksAnimation();
+            // Initialize Lottie after ScrollTrigger is properly set up
+            requestAnimationFrame(() => {
+              this.initializeLottieChainOnVisible();
+            });
+          }
         });
       });
     } catch (error) {
       console.error('Error in ngAfterViewInit:', error);
+    }
+  }
+
+  /**
+   * Remove GSAP pin-spacers and inline styles that can leave the page offset,
+   * making the top content (hero) unreachable even after disabling animations.
+   */
+  private removeGsapPinArtifacts(): void {
+    try {
+      // Kill all ScrollTriggers
+      try { ScrollTrigger.killAll(); } catch {}
+
+      // Remove pin-spacer wrappers if present
+      document.querySelectorAll('.pin-spacer').forEach((spacer) => {
+        const fragment = document.createDocumentFragment();
+        while (spacer.firstChild) fragment.appendChild(spacer.firstChild);
+        spacer.parentElement?.replaceChild(fragment, spacer);
+      });
+
+      // Clear inline transforms on common containers
+      gsap.set(['body', 'html', '.how-it-works-pinned-viewport', '.how-it-works-track'], { clearProps: 'all' });
+
+      // Ensure scroll is at the top after cleanup
+      window.scrollTo(0, 0);
+    } catch (e) {
+      // Best-effort cleanup; ignore
     }
   }
 
@@ -318,21 +354,15 @@ export class HomeComponent implements OnInit, OnDestroy, AfterViewInit {
         start: "top top",
         end: () => "+=" + (track.scrollWidth - document.documentElement.clientWidth),
         scrub: ANIMATION_CONFIG.SCROLL_SCRUB,
-        pin: true,
-        pinSpacing: true,
+        pin: false,
+        pinSpacing: false,
         invalidateOnRefresh: true,
         anticipatePin: 1,
         fastScrollEnd: true,
         preventOverlaps: true,
         refreshPriority: -1, // Lower priority to prevent early calculation
-        // Optimized snapping for better performance
-        snap: {
-          snapTo: 1 / (panels.length - 1),
-          duration: ANIMATION_CONFIG.SNAP_DURATION,
-          delay: 0.05,
-          ease: "power2.out",
-          directional: false
-        },
+        // Disable snapping entirely to avoid trapping the scroll near the start/end
+        snap: false as any,
         markers: ANIMATION_CONFIG.DEBUG_MARKERS,
         // Reduced logging with throttling
         onUpdate: (self) => {
