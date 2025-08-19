@@ -17,6 +17,10 @@
   scroll-behavior: auto !important; /* Override smooth scroll during init */
 }
 
+.hero-content-wrapper {
+  z-index: 10;
+}
+
 /* Hero Section Styles */
 .hero-section {
   position: relative;
@@ -364,6 +368,12 @@
   animation: float 3s ease-in-out infinite;
 }
 
+/* Added for GSAP animation */
+.animation-stage {
+  overflow: hidden;
+}
+
+
 /* Video Hover Effects */
 .video-container video {
   filter: brightness(0.8);
@@ -376,34 +386,59 @@
 
 /* How it Works Section Styles */
 .how-it-works-pinned-viewport {
+  position: absolute;
+  top: 0;
+  left: 0;
   width: 100vw;
   overflow: hidden;
-  position: relative;
-  z-index: 1; /* Keep below following sections to avoid overlay */
+  z-index: 20; /* Higher than hero content (z-10) to allow flag overlap */
 }
 
 .flag-background {
-  position: absolute;
-  inset: 0;
+  position: fixed; /* Changed to fixed to ensure it covers everything */
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
   display: flex;
-  z-index: 0; /* Behind the track */
+  z-index: 15; /* Much higher z-index to ensure it's on top */
+  pointer-events: none; /* allow interactions to pass through when overlayed */
+  will-change: transform; /* optimize for translate during transition */
+}
+
+/* Body-level overlay for hero→how-it-works transition */
+.flag-overlay {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 100vh;
+  display: flex;
+  z-index: 0;
+  pointer-events: none;
+  transform: translateY(100%);
+  will-change: transform;
 }
 .flag-stripe-green {
   width: 33.3333%;
   height: 100%;
   background-color: #008751; /* Nigerian Green */
+  transform-origin: bottom;
+  transform: scaleY(0); /* Start hidden */
 }
 .flag-stripe-white {
   width: 33.3333%;
   height: 100%;
   background-color: #FFFFFF;
+  transform-origin: bottom;
+  transform: scaleY(0); /* Start hidden */
 }
 
 .how-it-works-track {
   display: flex;
   height: 100%;
   position: relative;
-  z-index: 1; /* Above the flag */
+  z-index: 30; /* Above the flag */
   will-change: transform; /* Hint for smoother animations */
 }
 
@@ -416,6 +451,7 @@
   justify-content: center;
   padding: 2rem; /* Tailwind p-8 */
   padding-bottom: 6.5rem; /* Slightly increased for scroll indicator clearance */
+  opacity: 0; /* Start hidden */
 }
 
 .panel-content-wrapper {
