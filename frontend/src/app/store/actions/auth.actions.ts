@@ -8,7 +8,7 @@ export const loginSuccess = createAction('[Auth] Login Success', props<{ user: U
 export const loginFailure = createAction('[Auth] Login Failure', props<{ error: AuthError }>());
 
 // Registration Actions
-export const register = createAction('[Auth] Register', props<{ email: string; password: string }>());
+export const register = createAction('[Auth] Register', props<{ email: string; password: string; fullName: string }>());
 export const registerSuccess = createAction('[Auth] Register Success', props<{ user: User | null; session: Session | null }>()); // User might be null if email confirmation is required
 export const registerFailure = createAction('[Auth] Register Failure', props<{ error: AuthError }>());
 

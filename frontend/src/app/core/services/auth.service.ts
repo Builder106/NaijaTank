@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, OnDestroy } from '@angular/core';
 import { Router } from '@angular/router';
 import {
   AuthChangeEvent,
@@ -18,18 +18,21 @@ import { AppState } from '../../store';
 @Injectable({
   providedIn: 'root',
 })
-export class AuthService {
+export class AuthService implements OnDestroy {
   private currentUser: BehaviorSubject<User | null> = new BehaviorSubject<User | null>(null);
   private currentSession: BehaviorSubject<Session | null> = new BehaviorSubject<Session | null>(null);
   public readonly currentUser$: Observable<User | null> = this.currentUser.asObservable();
   public readonly currentSession$: Observable<Session | null> = this.currentSession.asObservable();
+  
+  private authStateSubscription?: { data: { subscription: any } };
 
   constructor(
     private router: Router,
     private supabaseService: SupabaseService,
     private store: Store<AppState>
   ) {
-    this.supabaseService.supabase.auth.onAuthStateChange((event: AuthChangeEvent, session: AuthSession | null) => {
+    // Store the subscription reference for proper cleanup
+    this.authStateSubscription = this.supabaseService.supabase.auth.onAuthStateChange((event: AuthChangeEvent, session: AuthSession | null) => {
       if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'USER_UPDATED') {
         this.currentUser.next(session?.user ?? null);
         this.currentSession.next(session);
@@ -51,6 +54,17 @@ export class AuthService {
     this.loadInitialSession();
   }
 
+  ngOnDestroy(): void {
+    // Clean up the auth state change subscription
+    if (this.authStateSubscription?.data?.subscription) {
+      this.authStateSubscription.data.subscription.unsubscribe();
+    }
+    
+    // Complete the BehaviorSubjects
+    this.currentUser.complete();
+    this.currentSession.complete();
+  }
+
   private async loadInitialSession() {
     const { data: { session } } = await this.supabaseService.supabase.auth.getSession();
     if (session) {
@@ -67,8 +81,17 @@ export class AuthService {
     }
   }
 
-  async signUp(credentials: SignUpWithPasswordCredentials) {
-    const { data, error } = await this.supabaseService.supabase.auth.signUp(credentials);
+  async signUp(credentials: SignUpWithPasswordCredentials & { fullName?: string }) {
+    const { fullName, ...authCredentials } = credentials;
+    const { data, error } = await this.supabaseService.supabase.auth.signUp({
+      ...authCredentials,
+      options: {
+        data: {
+          full_name: fullName,
+          name: fullName
+        }
+      }
+    });
     return { user: data.user, session: data.session, error };
   }
 

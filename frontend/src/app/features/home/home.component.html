@@ -9,9 +9,18 @@
         muted 
         loop 
         playsinline
+        preload="metadata"
+        [poster]="videoPosterUrl"
         class="w-full h-full object-cover hero-video-fade-in"
+        [class.opacity-0]="!videoLoaded"
+        (loadeddata)="onVideoLoaded()"
         [attr.aria-label]="'Background video showing fuel stations in Nigeria'">
-        <source src="https://res.cloudinary.com/dhc3kh8qk/video/upload/v1755377934/landing_page_cqmjrz.mp4" type="video/mp4">
+        <!-- Progressive loading: Start with lower quality for faster initial load -->
+        <source [src]="videoUrlLowQuality" type="video/mp4" media="(max-width: 768px)">
+        <source [src]="videoUrlMediumQuality" type="video/mp4" media="(max-width: 1200px)">
+        <source [src]="videoUrlHighQuality" type="video/mp4">
+        <!-- Fallback for older browsers -->
+        <source src="https://res.cloudinary.com/dhc3kh8qk/video/upload/q_auto:low,f_auto,br_800k/v1755377934/landing_page_cqmjrz.mp4" type="video/mp4">
         Your browser does not support the video tag.
       </video>
     </div>
@@ -280,7 +289,7 @@
 
 
 <!-- CTA Section -->
-<section class="cta-section section py-20 bg-gradient-to-r from-primary-600 via-primary-700 to-primary-800 relative overflow-hidden">
+<section class="cta-section py-20 bg-gradient-to-r from-primary-600 via-primary-700 to-primary-800 relative overflow-hidden">
   <!-- African Pattern Overlay -->
   <div class="absolute inset-0 opacity-10" aria-hidden="true">
     <div class="african-pattern w-full h-full"></div>

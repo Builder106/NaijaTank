@@ -61,7 +61,11 @@ export class AuthEffects {
     this.actions$.pipe(
       ofType(AuthActions.register),
       exhaustMap((action) =>
-        from(this.authService.signUp({ email: action.email, password: action.password })).pipe(
+        from(this.authService.signUp({ 
+          email: action.email, 
+          password: action.password,
+          fullName: action.fullName 
+        })).pipe(
           map(({ user, session, error }) => {
             if (error) {
               return AuthActions.registerFailure({ error });

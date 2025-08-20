@@ -35,11 +35,14 @@ import {
  
  const ANIMATION_CONFIG = {
    HERO_VIDEO_DELAY: 0.7,
-   SCROLL_SCRUB: 0.3,
-   SNAP_DURATION: 0.2,
+  SCROLL_SCRUB: 0.2, // Reduced for smoother performance
+  SNAP_DURATION: 0.15, // Faster snapping
    INTERSECTION_THRESHOLD: 0.5,
    DEBUG_MARKERS: false,
-   THROTTLE_LOGGING: 200
+  THROTTLE_LOGGING: 200,
+  // New performance settings
+  RAF_THROTTLE: 16, // Throttle to ~60fps
+  RESIZE_DEBOUNCE: 150 // Debounce resize events
  } as const;
  
  const ENABLE_HOW_IT_WORKS_ANIMATION = true;
@@ -69,11 +72,18 @@ import {
    loading$: Observable<boolean>;
    error$: Observable<any>;
  
-   searchQuery$ = new BehaviorSubject<string>('');
-   filteredStations$: Observable<Station[]>;
-   searchQuery = '';
- 
-   private destroy$ = new Subject<void>();
+     searchQuery$ = new BehaviorSubject<string>('');
+  filteredStations$: Observable<Station[]>;
+  searchQuery = '';
+
+  // Video optimization properties
+  videoLoaded = false;
+  readonly videoPosterUrl = 'https://res.cloudinary.com/dhc3kh8qk/video/upload/so_2,f_auto,q_auto:good,w_1920,h_1080/v1755377934/landing_page_cqmjrz.jpg';
+  readonly videoUrlLowQuality = 'https://res.cloudinary.com/dhc3kh8qk/video/upload/q_auto:low,f_auto,br_500k,w_1280,h_720/v1755377934/landing_page_cqmjrz.mp4';
+  readonly videoUrlMediumQuality = 'https://res.cloudinary.com/dhc3kh8qk/video/upload/q_auto:good,f_auto,br_1200k,w_1920,h_1080/v1755377934/landing_page_cqmjrz.mp4';
+  readonly videoUrlHighQuality = 'https://res.cloudinary.com/dhc3kh8qk/video/upload/q_auto:good,f_auto,br_2000k/v1755377934/landing_page_cqmjrz.mp4';
+
+  private destroy$ = new Subject<void>();
  
    // Video-related
    private videoElement?: HTMLVideoElement;
@@ -143,8 +153,9 @@ import {
  
      gsap.registerPlugin(ScrollTrigger);
  
-     this.loadNearbyStations();
-     this.setupScrollTriggerResizeRefresh();
+         this.loadNearbyStations();
+    this.setupScrollTriggerResizeRefresh();
+    this.preloadHeroVideo();
  
      // light warning if many triggers exist; keep as diagnostic only
      const existingTriggers = ScrollTrigger.getAll();
@@ -159,16 +170,27 @@ import {
          window.clearTimeout(this.resizeRefreshTimeoutId);
        }
        this.resizeRefreshTimeoutId = window.setTimeout(() => {
-         try { ScrollTrigger.refresh(); } catch { /* best effort */ }
-       }, 800);
-     };
-     window.addEventListener('resize', handler);
+        try { 
+          // Use requestAnimationFrame for smooth refresh
+          requestAnimationFrame(() => {
+            ScrollTrigger.refresh(); 
+          });
+        } catch { /* best effort */ }
+      }, ANIMATION_CONFIG.RESIZE_DEBOUNCE);
+    };
+    
+    // Use passive listener for better performance
+    window.addEventListener('resize', handler, { passive: true });
      // store handler so we can remove it on destroy
      (this as any)._resizeHandler = handler;
  
-     // initial refresh at next tick
+    // initial refresh at next tick with RAF
      const id = window.setTimeout(() => {
-       try { ScrollTrigger.refresh(); } catch {}
+      try { 
+        requestAnimationFrame(() => {
+          ScrollTrigger.refresh(); 
+        });
+      } catch {}
      }, 0);
      this.pendingTimeouts.push(id);
    }
@@ -283,10 +305,13 @@ import {
          this.videoElement.addEventListener('canplaythrough', this.canPlayThroughListener, { once: true });
  
          this.videoReadyTimeoutId = window.setTimeout(() => {
-           console.warn('Video ready timeout reached, proceeding with animations');
+          // Only show warning if video hasn't loaded at all
+          if (this.videoElement && this.videoElement.readyState === HTMLMediaElement.HAVE_NOTHING) {
+            console.warn('Video loading timeout - proceeding with animations without video');
+          }
            if (this.resolveVideoReady) this.resolveVideoReady();
            this.videoReadyTimeoutId = undefined;
-         }, 3000);
+        }, 2000); // Reduced timeout to 2 seconds
  
          // record timeout so we can cancel in ngOnDestroy if needed
          if (this.videoReadyTimeoutId !== undefined) this.pendingTimeouts.push(this.videoReadyTimeoutId);
@@ -333,6 +358,15 @@ import {
      // Disconnect IntersectionObserver
      try { this.lottieChainInteractionObserver?.disconnect(); } catch {}
  
+    // Clean up resize listener
+    try {
+      const resizeHandler = (this as any)._resizeHandler;
+      if (resizeHandler) {
+        window.removeEventListener('resize', resizeHandler);
+        (this as any)._resizeHandler = null;
+      }
+    } catch {}
+
    }
  
    public loadNearbyStations(): void {
@@ -368,27 +402,77 @@ import {
         return;
       }
 
+     // Cache expensive calculations to avoid forced reflows during animation
+     const viewportWidth = document.documentElement.clientWidth;
+     const trackScrollWidth = track.scrollWidth;
+     const trackTranslateDistance = trackScrollWidth - viewportWidth;
+     const animationEndDistance = trackTranslateDistance + window.innerHeight;
+
+     // Pre-configure elements for optimal performance
+     gsap.set(track, { 
+       willChange: 'transform',
+       backfaceVisibility: 'hidden',
+       perspective: 1000
+     });
+     
+     gsap.set(flagPanels, { 
+       willChange: 'transform',
+       transformOrigin: 'bottom center'
+     });
+
+     gsap.set(panels, { 
+       willChange: 'opacity',
+       opacity: 0
+     });
+
       const masterTimeline = gsap.timeline({
         scrollTrigger: {
           trigger: animationStage,
           start: 'top top',
-          end: () => `+=${(track.scrollWidth - document.documentElement.clientWidth) + window.innerHeight}`,
-          scrub: true,
+         end: `+=${animationEndDistance}`,
+         scrub: ANIMATION_CONFIG.SCROLL_SCRUB,
           pin: true,
           invalidateOnRefresh: true,
           anticipatePin: 1,
           markers: ANIMATION_CONFIG.DEBUG_MARKERS,
-        },
-        defaults: { ease: 'none' },
-      });
+         // Optimize refresh behavior
+         refreshPriority: -1,
+         // Reduce calculation frequency
+         fastScrollEnd: true,
+       },
+       defaults: { 
+         ease: 'none',
+         force3D: true // Force hardware acceleration
+       },
+     });
 
+     // Use cached values in animations to prevent recalculation
       masterTimeline
-        .fromTo(flagPanels, { scaleY: 0 }, { scaleY: 1, stagger: 0.3, duration: 2 })
-        .to(panels, { opacity: 1, duration: 0.5 }, "-=0.5")
+       .fromTo(flagPanels, 
+         { scaleY: 0 }, 
+         { 
+           scaleY: 1, 
+           stagger: 0.2, // Reduced stagger for smoother performance
+           duration: 1.5, // Reduced duration
+           force3D: true
+         }
+       )
+       .to(panels, { 
+         opacity: 1, 
+         duration: 0.3, // Reduced duration for faster opacity change
+         force3D: true
+       }, "-=0.3")
         .to(track, {
-          x: () => `-${track.scrollWidth - document.documentElement.clientWidth}px`,
-          duration: panels.length, 
-        }, "+=0.3");
+         x: -trackTranslateDistance, // Use cached value
+         duration: panels.length * 0.8, // Slightly faster scrolling
+         force3D: true,
+         ease: 'none'
+       }, "+=0.2");
+
+     // Clean up will-change after animation completes
+     masterTimeline.eventCallback("onComplete", () => {
+       gsap.set([track, flagPanels, panels], { clearProps: "willChange" });
+     });
 
     } catch (error) {
       console.error('Animation setup error:', error);
@@ -475,9 +559,95 @@ import {
      }
    }
  
-   trackByStation(index: number, station: Station): string {
-     return station.id;
-   }
+     trackByStation(index: number, station: Station): string {
+    return station.id;
+  }
+
+  onVideoLoaded(): void {
+    this.videoLoaded = true;
+    console.log('Hero video loaded successfully');
+    
+    // Start intelligent preloading of higher quality versions in the background
+    this.preloadHigherQualityVideos();
+  }
+
+  private preloadHigherQualityVideos(): void {
+    // Use requestIdleCallback for non-blocking preloading of higher quality videos
+    const preloadWhenIdle = () => {
+      try {
+        // Create video elements to preload higher quality versions
+        const mediumQualityVideo = document.createElement('video');
+        mediumQualityVideo.preload = 'metadata';
+        mediumQualityVideo.src = this.videoUrlMediumQuality;
+        
+        // Only preload high quality on good connections
+        const connection = (navigator as any).connection;
+        if (connection && (connection.effectiveType === '4g' || connection.downlink > 2)) {
+          setTimeout(() => {
+            const highQualityVideo = document.createElement('video');
+            highQualityVideo.preload = 'metadata';
+            highQualityVideo.src = this.videoUrlHighQuality;
+          }, 2000); // Delay high quality preloading
+        }
+        
+        console.log('Started background preloading of higher quality video versions');
+      } catch (error) {
+        console.warn('Background video preloading failed:', error);
+      }
+    };
+
+    // Use requestIdleCallback if available, otherwise setTimeout
+    if ('requestIdleCallback' in window) {
+      requestIdleCallback(preloadWhenIdle, { timeout: 5000 });
+    } else {
+      setTimeout(preloadWhenIdle, 1000);
+    }
+  }
+
+  private preloadHeroVideo(): void {
+    // Start preloading the low-quality video immediately for faster initial display
+    try {
+      const preloadVideo = document.createElement('video');
+      preloadVideo.preload = 'metadata';
+      preloadVideo.muted = true;
+      
+      // Network-aware loading: choose initial video quality based on connection
+      const connection = (navigator as any).connection || (navigator as any).mozConnection || (navigator as any).webkitConnection;
+      if (connection && connection.effectiveType) {
+        switch (connection.effectiveType) {
+          case 'slow-2g':
+          case '2g':
+            preloadVideo.src = this.videoUrlLowQuality;
+            break;
+          case '3g':
+            preloadVideo.src = this.videoUrlMediumQuality;
+            break;
+          default:
+            preloadVideo.src = this.videoUrlLowQuality; // Start with low quality for faster initial load
+        }
+      } else {
+        preloadVideo.src = this.videoUrlLowQuality;
+      }
+      
+      // Preload poster image with error handling and immediate usage
+      const posterImg = new Image();
+      posterImg.onload = () => {
+        // Set poster immediately when loaded to avoid preload warning
+        const heroVideo = this.heroVideo?.nativeElement;
+        if (heroVideo && !heroVideo.poster) {
+          heroVideo.poster = this.videoPosterUrl;
+        }
+      };
+      posterImg.onerror = () => {
+        console.warn('Failed to preload video poster image');
+      };
+      posterImg.src = this.videoPosterUrl;
+      
+      console.log('Started preloading hero video assets with network-aware quality selection');
+    } catch (error) {
+      console.warn('Video preloading failed:', error);
+    }
+  }
  
    scrollToHero(): void {
      const heroSection = document.querySelector('.hero-section');

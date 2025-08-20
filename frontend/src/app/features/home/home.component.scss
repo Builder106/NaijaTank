@@ -19,6 +19,7 @@
 
 .hero-content-wrapper {
   z-index: 10;
+  position: relative;
 }
 
 /* Hero Section Styles */
@@ -276,6 +277,11 @@
 .hero-video-fade-in {
   opacity: 0;
   animation: fadeInVideo 1s ease-out 0.7s forwards; /* Increased delay to 0.7s */
+  transition: opacity 0.5s ease-in-out;
+  
+  &.opacity-0 {
+    opacity: 0 !important;
+  }
 }
 
 @keyframes fadeInVideo {
@@ -392,6 +398,12 @@
   width: 100vw;
   overflow: hidden;
   z-index: 20; /* Higher than hero content (z-10) to allow flag overlap */
+  /* Keep visual overlap but don't intercept clicks until we want to */
+  pointer-events: none;
+  /* Performance optimizations */
+  will-change: transform;
+  contain: layout style paint;
+  transform: translateZ(0); /* Force hardware acceleration */
 }
 
 .flag-background {
@@ -404,6 +416,11 @@
   z-index: 15; /* Much higher z-index to ensure it's on top */
   pointer-events: none; /* allow interactions to pass through when overlayed */
   will-change: transform; /* optimize for translate during transition */
+}
+
+/* When the how-it-works viewport should take input (after hero scrolls out) */
+.how-it-works-pinned-viewport.is-interactive {
+  pointer-events: auto;
 }
 
 /* Body-level overlay for hero→how-it-works transition */
@@ -423,15 +440,19 @@
   width: 33.3333%;
   height: 100%;
   background-color: #008751; /* Nigerian Green */
-  transform-origin: bottom;
-  transform: scaleY(0); /* Start hidden */
+  transform-origin: bottom center;
+  transform: scaleY(0) translateZ(0); /* Start hidden + hardware acceleration */
+  will-change: transform;
+  backface-visibility: hidden;
 }
 .flag-stripe-white {
   width: 33.3333%;
   height: 100%;
   background-color: #FFFFFF;
-  transform-origin: bottom;
-  transform: scaleY(0); /* Start hidden */
+  transform-origin: bottom center;
+  transform: scaleY(0) translateZ(0); /* Start hidden + hardware acceleration */
+  will-change: transform;
+  backface-visibility: hidden;
 }
 
 .how-it-works-track {
@@ -440,6 +461,11 @@
   position: relative;
   z-index: 30; /* Above the flag */
   will-change: transform; /* Hint for smoother animations */
+  /* Performance optimizations */
+  backface-visibility: hidden;
+  perspective: 1000px;
+  transform: translateZ(0); /* Force hardware acceleration */
+  contain: layout style paint;
 }
 
 .how-it-works-panel {
@@ -452,6 +478,10 @@
   padding: 2rem; /* Tailwind p-8 */
   padding-bottom: 6.5rem; /* Slightly increased for scroll indicator clearance */
   opacity: 0; /* Start hidden */
+  /* Performance optimizations */
+  will-change: opacity;
+  transform: translateZ(0); /* Force hardware acceleration */
+  contain: layout style paint;
 }
 
 .panel-content-wrapper {
