@@ -20,6 +20,22 @@
 .hero-content-wrapper {
   z-index: 10;
   position: relative;
+  transition: pointer-events 0.3s ease;
+}
+
+/* Disable interactions when covered by flag panels */
+.hero-content-wrapper.non-interactive {
+  pointer-events: none;
+}
+
+/* Ensure individual hero elements respect the parent pointer-events setting */
+.hero-content-wrapper.non-interactive * {
+  pointer-events: none;
+}
+
+/* Re-enable pointer events for screen readers and keyboard navigation */
+.hero-content-wrapper.non-interactive *:focus {
+  pointer-events: auto;
 }
 
 /* Hero Section Styles */
@@ -372,6 +388,19 @@
 /* Scroll Indicator Animation */
 .scroll-arrow {
   animation: float 3s ease-in-out infinite;
+}
+
+/* How it Works Scroll Indicator - Initially hidden */
+.scroll-indicator.scroll-how-it-works {
+  opacity: 0 !important;
+  transition: opacity 0.4s ease;
+  pointer-events: none;
+}
+
+/* Show the how-it-works scroll indicator when flag animation starts */
+.scroll-indicator.scroll-how-it-works.visible {
+  opacity: 1 !important;
+  pointer-events: auto;
 }
 
 /* Added for GSAP animation */

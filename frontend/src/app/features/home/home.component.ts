@@ -207,10 +207,16 @@ import {
        return;
      }
  
-     if (!DISABLE_SCROLL_FIXES) {
+          if (!DISABLE_SCROLL_FIXES) {
        window.scrollTo(0, 0);
      }
- 
+
+     // Ensure how-it-works scroll indicator starts hidden
+     const howItWorksScrollIndicator = document.querySelector('.scroll-how-it-works') as HTMLElement | null;
+     if (howItWorksScrollIndicator) {
+       howItWorksScrollIndicator.classList.remove('visible');
+     }
+
      try {
        this.initializeVideoPlayer();
        await this.videoReadyPromise;
@@ -355,9 +361,23 @@ import {
        });
      } catch { /* ignore */ }
  
-     // Disconnect IntersectionObserver
+          // Disconnect IntersectionObserver
      try { this.lottieChainInteractionObserver?.disconnect(); } catch {}
- 
+
+     // Clean up hero content interactivity state
+     try {
+       const heroContentWrapper = document.querySelector('.hero-content-wrapper') as HTMLElement | null;
+       if (heroContentWrapper) {
+         heroContentWrapper.classList.remove('non-interactive');
+       }
+       
+       // Clean up scroll indicator state
+       const howItWorksScrollIndicator = document.querySelector('.scroll-how-it-works') as HTMLElement | null;
+       if (howItWorksScrollIndicator) {
+         howItWorksScrollIndicator.classList.remove('visible');
+       }
+     } catch {}
+
     // Clean up resize listener
     try {
       const resizeHandler = (this as any)._resizeHandler;
@@ -390,17 +410,24 @@ import {
        });
    }
  
-   private setupHowItWorksAnimation(): void {
-     try {
-       const animationStage = document.querySelector('.animation-stage') as HTMLElement | null;
-       const track = document.querySelector('.how-it-works-track') as HTMLElement | null;
-       const panels = gsap.utils.toArray(".how-it-works-panel") as HTMLElement[];
-       const flagPanels = gsap.utils.toArray('.flag-background .flag-stripe-green, .flag-background .flag-stripe-white') as HTMLElement[];
+     private setupHowItWorksAnimation(): void {
+    try {
+      const animationStage = document.querySelector('.animation-stage') as HTMLElement | null;
+      const track = document.querySelector('.how-it-works-track') as HTMLElement | null;
+      const panels = gsap.utils.toArray(".how-it-works-panel") as HTMLElement[];
+      const flagPanels = gsap.utils.toArray('.flag-background .flag-stripe-green, .flag-background .flag-stripe-white') as HTMLElement[];
+      const heroContentWrapper = document.querySelector('.hero-content-wrapper') as HTMLElement | null;
+      const howItWorksScrollIndicator = document.querySelector('.scroll-how-it-works') as HTMLElement | null;
 
-      if (!animationStage || !track || panels.length === 0 || flagPanels.length === 0) {
-        console.warn('Animation elements not found - skipping how-it-works animation');
-        return;
-      }
+     if (!animationStage || !track || panels.length === 0 || flagPanels.length === 0 || !heroContentWrapper) {
+       console.warn('Animation elements not found - skipping how-it-works animation');
+       return;
+     }
+
+     // Ensure scroll indicator starts hidden
+     if (howItWorksScrollIndicator) {
+       howItWorksScrollIndicator.classList.remove('visible');
+     }
 
      // Cache expensive calculations to avoid forced reflows during animation
      const viewportWidth = document.documentElement.clientWidth;
@@ -425,26 +452,53 @@ import {
        opacity: 0
      });
 
-      const masterTimeline = gsap.timeline({
-        scrollTrigger: {
-          trigger: animationStage,
-          start: 'top top',
-         end: `+=${animationEndDistance}`,
-         scrub: ANIMATION_CONFIG.SCROLL_SCRUB,
-          pin: true,
-          invalidateOnRefresh: true,
-          anticipatePin: 1,
-          markers: ANIMATION_CONFIG.DEBUG_MARKERS,
-         // Optimize refresh behavior
-         refreshPriority: -1,
-         // Reduce calculation frequency
-         fastScrollEnd: true,
-       },
-       defaults: { 
-         ease: 'none',
-         force3D: true // Force hardware acceleration
-       },
-     });
+           const masterTimeline = gsap.timeline({
+       scrollTrigger: {
+         trigger: animationStage,
+         start: 'top top',
+        end: `+=${animationEndDistance}`,
+        scrub: ANIMATION_CONFIG.SCROLL_SCRUB,
+         pin: true,
+         invalidateOnRefresh: true,
+         anticipatePin: 1,
+         markers: ANIMATION_CONFIG.DEBUG_MARKERS,
+        // Optimize refresh behavior
+        refreshPriority: -1,
+        // Reduce calculation frequency
+        fastScrollEnd: true,
+        // Add callback to manage hero content interactivity and scroll indicator visibility
+        onUpdate: (self) => {
+          // When flag panels start appearing (progress > 0.1), disable hero interactions
+          if (self.progress > 0.1) {
+            if (!heroContentWrapper.classList.contains('non-interactive')) {
+              heroContentWrapper.classList.add('non-interactive');
+            }
+          } else {
+            // Re-enable hero interactions when flag panels are not visible
+            if (heroContentWrapper.classList.contains('non-interactive')) {
+              heroContentWrapper.classList.remove('non-interactive');
+            }
+          }
+
+          // Show how-it-works scroll indicator when flag animation starts (progress > 0.1)
+          if (howItWorksScrollIndicator) {
+            if (self.progress > 0.1) {
+              if (!howItWorksScrollIndicator.classList.contains('visible')) {
+                howItWorksScrollIndicator.classList.add('visible');
+              }
+            } else {
+              if (howItWorksScrollIndicator.classList.contains('visible')) {
+                howItWorksScrollIndicator.classList.remove('visible');
+              }
+            }
+          }
+        }
+      },
+      defaults: { 
+        ease: 'none',
+        force3D: true // Force hardware acceleration
+      },
+    });
 
      // Use cached values in animations to prevent recalculation
       masterTimeline
@@ -452,7 +506,7 @@ import {
          { scaleY: 0 }, 
          { 
            scaleY: 1, 
-           stagger: 0.2, // Reduced stagger for smoother performance
+           stagger: 0.5, // Reduced stagger for smoother performance
            duration: 1.5, // Reduced duration
            force3D: true
          }
@@ -472,6 +526,12 @@ import {
      // Clean up will-change after animation completes
      masterTimeline.eventCallback("onComplete", () => {
        gsap.set([track, flagPanels, panels], { clearProps: "willChange" });
+       // Re-enable hero interactions when animation completes
+       heroContentWrapper.classList.remove('non-interactive');
+       // Ensure scroll indicator remains visible at the end
+       if (howItWorksScrollIndicator) {
+         howItWorksScrollIndicator.classList.add('visible');
+       }
      });
 
     } catch (error) {
