@@ -49,7 +49,7 @@
             ],
             "index": "src/index.html",
             "browser": "src/main.ts",
-            "outputPath": "dist/naijatank",
+            "outputPath": "dist",
             "polyfills": [],
             "scripts": [],
             "styles": [
