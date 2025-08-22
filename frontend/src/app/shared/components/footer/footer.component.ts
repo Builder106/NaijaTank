@@ -1,6 +1,5 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { environment } from '../../../../environments/environment';
 
 @Component({
   selector: 'app-footer',
@@ -19,7 +18,7 @@ import { environment } from '../../../../environments/environment';
 })
 export class FooterComponent {
   year: number = new Date().getFullYear();
-//   version = environment.appVersion;
+  version = import.meta.env.NG_APP_VERSION;
 
   constructor() {}
 }
