@@ -19,7 +19,7 @@ import { environment } from '../../../../environments/environment';
 })
 export class FooterComponent {
   year: number = new Date().getFullYear();
-  version = environment.appVersion;
+//   version = environment.appVersion;
 
   constructor() {}
 }
