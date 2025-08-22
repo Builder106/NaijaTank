@@ -101,7 +101,6 @@ import {
    private resizeRefreshTimeoutId?: number;
    private pendingTimeouts: number[] = [];
    private flagOverlayEl?: HTMLElement;
-   private flagTransitionInitialized = false;
  
    // For throttled logs
    private lastScrollTriggerLog = 0;
@@ -537,12 +536,6 @@ import {
     } catch (error) {
       console.error('Animation setup error:', error);
     }
-  }
-
-  private setupHeroToHowItWorksFlagTransition(): void {
-    // This function is now empty as its logic has been merged into setupHowItWorksAnimation.
-    // We'll keep the function to avoid breaking any calls to it, but it will do nothing.
-    this.flagTransitionInitialized = true;
   }
 
   private initializeLottieChainOnVisible(): void {

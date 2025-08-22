@@ -7,3 +7,11 @@ email_templates/
 environment.development.ts
 environment.production.ts
 NaijaTank_Development_Phases.md
+font.svg
+
+# public/
+landing_page/
+
+# public/how-it-works
+idle/
+entrance/
