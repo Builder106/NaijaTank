@@ -1,23 +1,29 @@
-/// <reference types="vite/client" />
-
-// Augment Vite's existing ImportMetaEnv interface
-declare interface ImportMetaEnv {
-  // Add your VITE_ prefixed variables here.
-  // Making them optional (?:) is safer as env vars might not always be defined.
-  readonly VITE_SUPABASE_URL: string;
-  readonly VITE_SUPABASE_KEY: string;
-  readonly VITE_GOOGLE_MAPS_API_KEY: string;
-  readonly VITE_APP_VERSION: string;
-  // Add any other VITE_ prefixed variables your client uses here
-
-  // Optional: If you have many VITE_ variables and want a general fallback type.
-  // Otherwise, it's better to explicitly type all VITE_ variables you use.
-  // readonly [key: `VITE_${string}`]: any;
+// Define the type of the environment variables.
+declare interface Env {
+  readonly NODE_ENV: string;
+  // Replace the following with your own environment variables.
+  readonly NG_APP_SUPABASE_URL: string;
+  readonly NG_APP_SUPABASE_KEY: string;
+  readonly NG_APP_GOOGLE_MAPS_API_KEY: string;
+  [key: string]: any;
 }
 
-// This ensures ImportMeta is correctly typed with our augmented ImportMetaEnv.
-// While often provided by `vite/client`, explicitly defining it can avoid
-// TypeScript configuration nuances and ensures clarity.
-interface ImportMeta {
-  readonly env: ImportMetaEnv;
+// Choose how to access the environment variables.
+// Remove the unused options.
+
+// 1. Use import.meta.env.YOUR_ENV_VAR in your code. (conventional)
+declare interface ImportMeta {
+  readonly env: Env;
+}
+
+// 2. Use _NGX_ENV_.YOUR_ENV_VAR in your code. (customizable)
+// You can modify the name of the variable in angular.json.
+// ngxEnv: {
+//  define: '_NGX_ENV_',
+// }
+declare const _NGX_ENV_: Env;
+
+// 3. Use process.env.YOUR_ENV_VAR in your code. (deprecated)
+declare namespace NodeJS {
+  export interface ProcessEnv extends Env {}
 }

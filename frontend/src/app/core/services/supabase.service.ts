@@ -1,6 +1,5 @@
 import { Injectable } from '@angular/core';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
-import { environment } from '../../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
@@ -10,8 +9,8 @@ export class SupabaseService {
   public supabase: SupabaseClient;
 
   constructor() {
-    const supabaseUrl = environment.supabaseUrl;
-    const supabaseKey = environment.supabaseKey;
+    const supabaseUrl = import.meta.env.NG_APP_SUPABASE_URL;
+    const supabaseKey = import.meta.env.NG_APP_SUPABASE_KEY;
     
     if (!supabaseUrl || !supabaseKey) {
       // console.error('Supabase URL or key is missing in environment configuration');

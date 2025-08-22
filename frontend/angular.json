@@ -8,7 +8,7 @@
     "naijatank": {
       "architect": {
         "build": {
-          "builder": "@angular-devkit/build-angular:application",
+          "builder": "@ngx-env/builder:application",
           "configurations": {
             "development": {
               "extractLicenses": false,
@@ -41,7 +41,11 @@
             "assets": [
               "src/assets",
               "src/favicon.ico",
-              { "glob": "**/*", "input": "public/", "output": "/" }
+              {
+                "glob": "**/*",
+                "input": "public/",
+                "output": "/"
+              }
             ],
             "index": "src/index.html",
             "browser": "src/main.ts",
@@ -60,7 +64,7 @@
           }
         },
         "serve": {
-          "builder": "@angular-devkit/build-angular:dev-server",
+          "builder": "@ngx-env/builder:dev-server",
           "configurations": {
             "development": {
               "buildTarget": "naijatank:build:development"
@@ -72,7 +76,8 @@
               "buildTarget": "naijatank:build:staging"
             }
           },
-          "defaultConfiguration": "development"
+          "defaultConfiguration": "development",
+          "options": {}
         }
       },
       "prefix": "app",

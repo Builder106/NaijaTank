@@ -3,7 +3,6 @@ import { CommonModule } from '@angular/common';
 import { Store } from '@ngrx/store';
 import { Subscription } from 'rxjs';
 import { Loader } from '@googlemaps/js-api-loader';
-import { environment } from '../../../../environments/environment';
 import * as GeolocationActions from '../../../store/actions/geolocation.actions'; 
 import * as StationActions from '../../../store/actions/station.actions';
 
@@ -48,7 +47,7 @@ export class LocationSelectorComponent implements OnInit, AfterViewInit, OnDestr
 
   async ngAfterViewInit(): Promise<void> {
     const loader = new Loader({
-      apiKey: environment.googleMapsApiKey,
+      apiKey: import.meta.env.NG_APP_GOOGLE_MAPS_API_KEY,
       version: 'weekly',
       libraries: ['places']
     });

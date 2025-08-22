@@ -1,3 +1,5 @@
+/// <reference types="@types/google.maps" />
+
 import { Component, OnInit, AfterViewInit, ViewChild, ElementRef, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
@@ -12,7 +14,6 @@ import * as StationActions from '../../../../store/actions/station.actions';
 import * as GeolocationSelectors from '../../../../store/selectors/geolocation.selectors';
 import { StationInfoCardComponent } from '../../../../shared/components/station-info-card/station-info-card.component';
 import { FilterBarComponent } from '../../../../shared/components/filter-bar/filter-bar.component';
-import { environment } from '../../../../../environments/environment';
 
 @Component({
   selector: 'app-station-map',
@@ -125,7 +126,7 @@ export class StationMapComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   async ngAfterViewInit(): Promise<void> {
-    const apiKey = environment.googleMapsApiKey;
+    const apiKey = import.meta.env.NG_APP_GOOGLE_MAPS_API_KEY;
     if (!apiKey) {
       console.error('Google Maps API Key is missing in environment configuration. Maps functionality may be degraded or unavailable.');
     }

@@ -7,9 +7,6 @@ import { HttpClient } from '@angular/common/http';
 import { provideStore } from '@ngrx/store';
 import { provideEffects } from '@ngrx/effects';
 import { provideStoreDevtools } from '@ngrx/store-devtools';
-import { provideLottieOptions } from 'ngx-lottie';
-import { LottieComponent } from 'ngx-lottie';
-
 import { routes } from './app.routes';
 import { reducers, metaReducers } from './store';
 import { StationEffects } from './store/effects/station.effects';
@@ -33,10 +30,6 @@ export const appConfig: ApplicationConfig = {
     provideStore(reducers, { metaReducers }),
     provideEffects([StationEffects, UserEffects, GeolocationEffects]),
     provideStoreDevtools({ maxAge: 25, logOnly: !isDevMode() }),
-    provideLottieOptions({
-      player: () => import('lottie-web'),
-    }),
-    LottieComponent,
     ...TranslateModule.forRoot({
       loader: {
         provide: TranslateLoader,
