@@ -78,7 +78,9 @@ import {
 
   // Video optimization properties
   videoLoaded = false;
+  showFallbackImage = false;
   readonly videoPosterUrl = 'https://res.cloudinary.com/dhc3kh8qk/video/upload/so_2,f_auto,q_auto:good,w_1920,h_1080/v1755377934/landing_page_cqmjrz.jpg';
+  readonly fallbackImageUrl = 'https://res.cloudinary.com/dhc3kh8qk/image/upload/v1755891185/Still_background_s1vybg.png';
   readonly videoUrlLowQuality = 'https://res.cloudinary.com/dhc3kh8qk/video/upload/q_auto:low,f_auto,br_500k,w_1280,h_720/v1755377934/landing_page_cqmjrz.mp4';
   readonly videoUrlMediumQuality = 'https://res.cloudinary.com/dhc3kh8qk/video/upload/q_auto:good,f_auto,br_1200k,w_1920,h_1080/v1755377934/landing_page_cqmjrz.mp4';
   readonly videoUrlHighQuality = 'https://res.cloudinary.com/dhc3kh8qk/video/upload/q_auto:good,f_auto,br_2000k/v1755377934/landing_page_cqmjrz.mp4';
@@ -312,11 +314,12 @@ import {
          this.videoReadyTimeoutId = window.setTimeout(() => {
           // Only show warning if video hasn't loaded at all
           if (this.videoElement && this.videoElement.readyState === HTMLMediaElement.HAVE_NOTHING) {
-            console.warn('Video loading timeout - proceeding with animations without video');
+            console.warn('Video loading timeout - showing fallback image');
+            this.showFallbackImage = true;
           }
            if (this.resolveVideoReady) this.resolveVideoReady();
            this.videoReadyTimeoutId = undefined;
-        }, 2000); // Reduced timeout to 2 seconds
+        }, 5000); // Reduced timeout to 5 seconds
  
          // record timeout so we can cancel in ngOnDestroy if needed
          if (this.videoReadyTimeoutId !== undefined) this.pendingTimeouts.push(this.videoReadyTimeoutId);
@@ -409,7 +412,7 @@ import {
        });
    }
  
-     private setupHowItWorksAnimation(): void {
+   private setupHowItWorksAnimation(): void {
     try {
       const animationStage = document.querySelector('.animation-stage') as HTMLElement | null;
       const track = document.querySelector('.how-it-works-track') as HTMLElement | null;
@@ -451,21 +454,21 @@ import {
        opacity: 0
      });
 
-           const masterTimeline = gsap.timeline({
+    const masterTimeline = gsap.timeline({
        scrollTrigger: {
          trigger: animationStage,
          start: 'top top',
-        end: `+=${animationEndDistance}`,
-        scrub: ANIMATION_CONFIG.SCROLL_SCRUB,
+         end: `+=${animationEndDistance}`,
+         scrub: ANIMATION_CONFIG.SCROLL_SCRUB,
          pin: true,
          invalidateOnRefresh: true,
          anticipatePin: 1,
          markers: ANIMATION_CONFIG.DEBUG_MARKERS,
-        // Optimize refresh behavior
-        refreshPriority: -1,
-        // Reduce calculation frequency
-        fastScrollEnd: true,
-        // Add callback to manage hero content interactivity and scroll indicator visibility
+         // Optimize refresh behavior
+         refreshPriority: -1,
+         // Reduce calculation frequency
+         fastScrollEnd: true,
+         // Add callback to manage hero content interactivity and scroll indicator visibility
         onUpdate: (self) => {
           // When flag panels start appearing (progress > 0.1), disable hero interactions
           if (self.progress > 0.1) {
